@@ -10,7 +10,7 @@ env:
   # Use Docker Buildkit for builds
   DOCKER_BUILDKIT: 1
   DEVENV: devenv
-  BROWSERTESTS_IMAGE: app-devenv
+  APP_IMAGE: app-devenv
 
 jobs:
   build-devenv:
@@ -22,10 +22,10 @@ jobs:
         run: docker --version
 
       - name: Build settings
-        run: "echo DOCKER_BUILDKIT=${DOCKER_BUILDKIT} --target ${DEVENV} -t ${BROWSERTESTS_IMAGE}"
+        run: "echo DOCKER_BUILDKIT=${DOCKER_BUILDKIT} --target ${DEVENV} -t ${APP_IMAGE}"
 
       - name: Build app development environment
-        run: "docker build --no-cache --target ${DEVENV} -t ${BROWSERTESTS_IMAGE} ."
+        run: "docker build --no-cache --target ${DEVENV} -t ${APP_IMAGE} ."
 
       - name: Check no mutation to source
         run: "[ ! -f foobear ]"
@@ -36,12 +36,9 @@ jobs:
       - name: Check source is mutated
         run: "[ -f foobear ]"
 
-  run-tests-default-chrome:
+  run-tests-default:
     needs: build-devenv
     runs-on: ubuntu-latest
-    env:
-      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
-      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v1
@@ -49,47 +46,7 @@ jobs:
         run: docker --version
 
       - name: Build app development environment
-        run: "docker build --no-cache --target ${DEVENV} -t ${BROWSERTESTS_IMAGE} ."
+        run: "docker build --no-cache --target ${DEVENV} -t ${APP_IMAGE} ."
 
-      - name: dockercomposerun (Run tests) with defaults
-        run: ./script/dockercomposerun
-
-  runtests-specified-firefox:
-    needs: build-devenv
-    runs-on: ubuntu-latest
-    env:
-      BROWSER: firefox
-      SELENIUM_IMAGE: selenium/standalone-firefox:latest
-      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
-      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
-
-    steps:
-      - uses: actions/checkout@v1
-      - name: docker version
-        run: docker --version
-
-      - name: Build app development environment
-        run: "docker build --no-cache --target ${DEVENV} -t ${BROWSERTESTS_IMAGE} ."
-
-      - name: dockercomposerun (Run tests) with Firefox
-        run: ./script/dockercomposerun
-
-  run-tests-specified-edge:
-    needs: build-devenv
-    runs-on: ubuntu-latest
-    env:
-      BROWSER: edge
-      SELENIUM_IMAGE: selenium/standalone-edge:latest
-      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
-      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
-
-    steps:
-      - uses: actions/checkout@v1
-      - name: docker version
-        run: docker --version
-
-      - name: Build app development environment
-        run: "docker build --no-cache --target ${DEVENV} -t ${BROWSERTESTS_IMAGE} ."
-
-      - name: dockercomposerun (Run tests) with Edge
-        run: ./script/dockercomposerun
+      - name: dockercomposerun (Run tests) with defaults (specify command)
+        run: ./script/dockercomposerun bundle exec rake
