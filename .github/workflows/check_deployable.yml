@@ -1,0 +1,88 @@
+name: Check Deployable
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  # Use Docker Buildkit for builds
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+
+  code-standards-rubocop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker version
+        run: docker --version
+
+      - name: Build linted app code deploy
+        run: docker build --no-cache --target lint -t app-lint .
+
+  security-scan-bundler-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker version
+        run: docker --version
+
+      - name: Build security-scanned app code for deploy
+        run: docker build --no-cache --target secscan -t app-secscan .
+
+  build-deploy:
+    needs: [code-standards-rubocop, security-scan-bundler-audit]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: docker version
+        run: docker --version
+
+      - name: Build app deploy
+        run: docker build --no-cache -t app .
+
+  run-tests-default-chrome:
+    needs: build-deploy
+    runs-on: ubuntu-latest
+    env:
+      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
+      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun (Run tests) with defaults
+        run: ./script/dockercomposerun
+
+  run-tests-specified-firefox:
+    needs: build-deploy
+    runs-on: ubuntu-latest
+    env:
+      BROWSER: firefox
+      SELENIUM_IMAGE: selenium/standalone-firefox:latest
+      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
+      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun (Run tests) with Firefox
+        run: ./script/dockercomposerun
+
+  run-tests-specified-edge:
+    needs: build-deploy
+    runs-on: ubuntu-latest
+    env:
+      BROWSER: edge
+      SELENIUM_IMAGE: selenium/standalone-edge:latest
+      LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
+      LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun (Run tests) with Edge
+        run: ./script/dockercomposerun
