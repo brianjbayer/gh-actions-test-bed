@@ -24,21 +24,6 @@ RUN apk add --no-cache vim
 # Start devenv in (command line) shell
 CMD sh
 
-### Lint Stage ###
-FROM builder AS lint
-COPY . .
-RUN bundle exec rake rubocop
-
-### Security Static Scan Stage ###
-# Explicit dependencies (altho redundant with devenv)
-# Keep build dependencies
-FROM builder AS secscan
-# Add git for bundler-audit
-RUN apk add --no-cache git
-# Just need Rakefile and Gemfile.lock
-COPY Rakefile ./
-RUN bundle exec rake bundle:audit
-
 ### Deploy Stage ###
 FROM ruby-alpine AS deploy
 # Throw errors if Gemfile has been modified since Gemfile.lock
@@ -49,9 +34,9 @@ RUN adduser -D deployer
 USER deployer
 
 # Copy over the built gems directory from the scanned layer
-COPY --from=secscan --chown=deployer /usr/local/bundle/ /usr/local/bundle/
+COPY --from=builder --chown=deployer /usr/local/bundle/ /usr/local/bundle/
 # Copy in app source from the lint layer
 WORKDIR /app
-COPY --from=lint --chown=deployer /app/ /app/
+COPY --chown=deployer . /app/
 
 CMD bundle exec rake
