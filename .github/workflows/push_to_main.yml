@@ -1,0 +1,22 @@
+name: Check Development Environment
+
+on:
+  push:
+    branches: [ main ]
+
+
+jobs:
+  git-log:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Git log
+        run: git log
+
+      - name: Git the branch
+        run: echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
+
+      - name: Git the last commit
+        run: echo "Last Commit: $(git rev-parse --short HEAD)"
+
