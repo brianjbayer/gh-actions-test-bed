@@ -1,9 +1,8 @@
-name: Check Development Environment
+name: Push to Main
 
 on:
   push:
     branches: [ main ]
-
 
 jobs:
   git-log:

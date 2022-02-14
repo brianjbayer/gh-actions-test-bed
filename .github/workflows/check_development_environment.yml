@@ -1,6 +1,8 @@
 name: Check Development Environment
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -11,6 +13,38 @@ env:
   APP_IMAGE: app-devenv
 
 jobs:
+  git-log:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Git log
+        run: git log
+
+  git-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  git-commit-sha:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Last commit of PR branch
+        run: echo ${{ github.event.pull_request.head.sha }}
+
+  git-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Branch
+        run: echo ${{ github.head_ref }}
+
   build-devenv:
     runs-on: ubuntu-latest
 
