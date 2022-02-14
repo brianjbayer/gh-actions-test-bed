@@ -1,7 +1,7 @@
 # gh-actions-test-bed
 
 This is a hopefully simple test bed for testing CI/CD
-with GitHub Actions
+with GitHub Actions.
 
 ## Running containerized locally
 ### Deploy
