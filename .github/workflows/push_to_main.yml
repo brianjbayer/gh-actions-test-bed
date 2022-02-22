@@ -2,9 +2,13 @@ name: Push to Main
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
-jobs:
+env:
+  # Use Docker Buildkit for builds
+  DOCKER_BUILDKIT: 1
+
   git-log:
     runs-on: ubuntu-latest
 
@@ -13,9 +17,18 @@ jobs:
       - name: Git log
         run: git log
 
-      - name: Git the branch
-        run: echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
+  git-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
-      - name: Git the last commit
-        run: echo "Last Commit: $(git rev-parse --short HEAD)"
+  git-merge-commit-sha:
+    runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v1
+      - name: Last commit of PR branch
+        run: echo {{ github.event.commits[0].id }}
