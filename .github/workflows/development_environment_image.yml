@@ -10,7 +10,7 @@ env:
   # Use Docker Buildkit for builds
   DOCKER_BUILDKIT: 1
   DEVENV: devenv
-  DEV_ENV_IMAGE: ${{ github.repository }}-${{ github.head_ref }}-dev:${{ github.event.pull_request.head.sha }}
+  DEV_ENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
 jobs:
   devenv-image:
