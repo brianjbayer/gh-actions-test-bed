@@ -71,7 +71,7 @@ jobs:
         run: "[ ! -f foobear ]"
 
       - name: Mutate source in dev env
-        run: docker run --rm -v ${PWD}:/app app-devenv touch foobear
+        run: docker run --rm -v ${PWD}:/app ${DEV_ENV_IMAGE} touch foobear
 
       - name: Check source is mutated
         run: "[ -f foobear ]"
