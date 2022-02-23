@@ -83,3 +83,11 @@ jobs:
 
       - name: Output tag in same job
         run: echo "SRC_TAG=[${SRC_TAG}]"
+
+  output-set-tag:
+    needs: [move-set-tag-from-commit-sha]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Output tag in same job
+        run: echo "TODO"
