@@ -8,11 +8,8 @@ on:
 env:
   # Use Docker Buildkit for builds
   DOCKER_BUILDKIT: 1
-  DEVENV: devenv
-  DEV_ENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
 jobs:
-
   git-log:
     runs-on: ubuntu-latest
 
@@ -31,15 +28,18 @@ jobs:
 
   git-commit-sha:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v1
       - name: Last commit of PR branch
         run: echo ${{ github.event.head_commit.id }}
 
+  git-commit-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Last commit of PR branch
+        run: echo "Message is... [${{ github.event.head_commit.message }}]"
+
   git-branch:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
       - name: Branch
