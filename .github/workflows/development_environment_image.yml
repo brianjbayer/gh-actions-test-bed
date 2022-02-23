@@ -90,4 +90,4 @@ jobs:
 
     steps:
       - name: Output tag in later job
-        run: echo "SRC_TAG=[${SRC_TAG}]"
+        run: echo "SRC_TAG=[${{ env.SRC_TAG }}]"
