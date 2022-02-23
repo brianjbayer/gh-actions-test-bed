@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Dev environment image name
-        run: echo "Dev Environment Image: $DEV_ENV_IMAGE"
+        run: echo "Dev Environment Image [${DEV_ENV_IMAGE}]"
 
   git-log:
     runs-on: ubuntu-latest
