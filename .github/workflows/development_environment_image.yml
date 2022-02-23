@@ -73,3 +73,13 @@ jobs:
       - name: Check source is mutated
         run: "[ -f foobear ]"
 
+  move-set-tag-from-commit-sha:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set tag
+        run: echo "SRC_TAG=$(git log -n 1 --skip 1 --pretty=format:"%H")" >> $GITHUB_ENV
+
+      - name: Output tag in same job
+        run: echo "SRC_TAG=[${SRC_TAG}]"
