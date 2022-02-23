@@ -73,21 +73,21 @@ jobs:
       - name: Check source is mutated
         run: "[ -f foobear ]"
 
-  move-set-tag-from-commit-sha:
+  set-tag-output-from-commit-sha:
     runs-on: ubuntu-latest
+    outputs:
+      src-tag: ${{ steps.tag.outputs.commitsha }}
 
     steps:
       - uses: actions/checkout@v1
       - name: Set tag
-        run: echo "SRC_TAG=$(git log -n 1 --skip 1 --pretty=format:"%H")" >> $GITHUB_ENV
-
-      - name: Output tag in same job
-        run: echo "SRC_TAG=[${SRC_TAG}]"
+        id: tag
+        run: echo "::set-output name=commitsha::$(git log -n 1 --skip 1 --pretty=format:"%H")"
 
   output-set-tag:
-    needs: [move-set-tag-from-commit-sha]
+    needs: [set-tag-output-from-commit-sha]
     runs-on: ubuntu-latest
 
     steps:
       - name: Output tag in later job
-        run: echo "SRC_TAG=[${{ env.SRC_TAG }}]"
+        run: echo "The src tag = [${{ needs.set-tag-output-from-commit-sha.outputs.src-tag }}]"
