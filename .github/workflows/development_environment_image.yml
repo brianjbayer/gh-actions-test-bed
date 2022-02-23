@@ -40,7 +40,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
       - name: Last commit of PR branch
         run: echo ${{ github.event.pull_request.head.sha }}
 
@@ -48,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
       - name: Branch
         run: echo ${{ github.head_ref }}
 

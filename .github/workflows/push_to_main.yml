@@ -8,6 +8,10 @@ on:
 env:
   # Use Docker Buildkit for builds
   DOCKER_BUILDKIT: 1
+  DEVENV: devenv
+  DEV_ENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+
+jobs:
 
   git-log:
     runs-on: ubuntu-latest
@@ -25,10 +29,18 @@ env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
-  git-merge-commit-sha:
+  git-commit-sha:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
       - name: Last commit of PR branch
-        run: echo {{ github.event.commits[0].id }}
+        run: echo ${{ github.event.head_commit.id }}
+
+  git-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Branch
+        run: echo ${{ github.head_ref }}
