@@ -50,16 +50,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Get merge commit message
-        run: echo "MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-
-      - name: Output merge commit message
-        run: echo "MERGE_MSG = [${MERGE_MSG}]"
-
       - name: Get merged branch name from merge commit message
         id: getbranch
-        run: echo "::set-output name=branchname::$(echo $MERGE_MSG | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | awk '{print $1}')"
-
+        run: echo "::set-output name=branchname::$(echo ${{ github.event.head_commit.message }} | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | awk '{print $1}')"
 
   output-stuff:
     needs: [merged-branch-last-commit, merged-branch-name]
