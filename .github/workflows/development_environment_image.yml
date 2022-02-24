@@ -73,21 +73,26 @@ jobs:
       - name: Check source is mutated
         run: "[ -f foobear ]"
 
-  set-tag-output-from-commit-sha:
+  merged-branch-last-commit:
     runs-on: ubuntu-latest
     outputs:
-      src-tag: ${{ steps.tag.outputs.commitsha }}
+      src-tag: ${{ steps.tag.outputs.lastcommit }}
 
     steps:
       - uses: actions/checkout@v1
       - name: Set tag
         id: tag
-        run: echo "::set-output name=commitsha::$(git log -n 1 --skip 1 --pretty=format:"%H")"
+        run: echo "::set-output name=lastcommit::$(git log -n 1 --skip 1 --pretty=format:"%H")"
 
   output-set-tag:
-    needs: [set-tag-output-from-commit-sha]
+    needs: [merged-branch-last-commit]
     runs-on: ubuntu-latest
+    env:
+      SRC_TAG: ${{ needs.merged-branch-last-commit.outputs.src-tag }}
 
     steps:
       - name: Output tag in later job
-        run: echo "The src tag = [${{ needs.set-tag-output-from-commit-sha.outputs.src-tag }}]"
+        run: echo "The src tag = [${{ needs.merged-branch-last-commit.outputs.src-tag }}]"
+
+      - name: Output tag in later job as env var
+        run: echo "SRC_TAG= [${SRC_TAG}]"
