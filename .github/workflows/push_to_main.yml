@@ -43,11 +43,30 @@ jobs:
         id: getcommit
         run: echo "::set-output name=lastcommit::$(git log -n 1 --skip 1 --pretty=format:"%H")"
 
-  output-set-tag:
-    needs: [merged-branch-last-commit]
+  merged-branch-name:
+    runs-on: ubuntu-latest
+    outputs:
+      branch-name: ${{ steps.getbranch.outputs.branchname }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Get merge commit message
+        run: echo "MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+
+      - name: Output merge commit message
+        run: echo "MERGE_MSG = [${MERGE_MSG}]"
+
+      - name: Get merged branch name from merge commit message
+        id: getbranch
+        run: echo "::set-output name=branchname::$(echo $MERGE_MSG | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | awk '{print $1}')"
+
+
+  output-stuff:
+    needs: [merged-branch-last-commit, merged-branch-name]
     runs-on: ubuntu-latest
     env:
       SRC_TAG: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+      SRC_BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
     steps:
       - name: Output tag in later job
@@ -56,3 +75,8 @@ jobs:
       - name: Output tag in later job as env var
         run: echo "SRC_TAG= [${SRC_TAG}]"
 
+      - name: Output branch in later job
+        run: echo "The src branch = [${{ needs.merged-branch-name.outputs.branch-name }}]"
+
+      - name: Output branch in later job as env var
+        run: echo "SRC_TAG= [${SRC_BRANCH}]"
