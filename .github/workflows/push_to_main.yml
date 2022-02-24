@@ -26,21 +26,33 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
-  git-commit-sha:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Last commit of PR branch
-        run: echo ${{ github.event.head_commit.id }}
-
   git-commit-message:
     runs-on: ubuntu-latest
     steps:
       - name: Last commit of PR branch
         run: echo "Message is... [${{ github.event.head_commit.message }}]"
 
-  git-branch:
+  merged-branch-last-commit:
     runs-on: ubuntu-latest
+    outputs:
+      branch-commit: ${{ steps.getcommit.outputs.lastcommit }}
+
     steps:
       - uses: actions/checkout@v1
-      - name: Branch
-        run: echo ${{ github.head_ref }}
+      - name: Get last commit of merged branch
+        id: getcommit
+        run: echo "::set-output name=lastcommit::$(git log -n 1 --skip 1 --pretty=format:"%H")"
+
+  output-set-tag:
+    needs: [merged-branch-last-commit]
+    runs-on: ubuntu-latest
+    env:
+      SRC_TAG: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+
+    steps:
+      - name: Output tag in later job
+        run: echo "The src tag = [${{ needs.merged-branch-last-commit.outputs.branch-commit }}]"
+
+      - name: Output tag in later job as env var
+        run: echo "SRC_TAG= [${SRC_TAG}]"
+
