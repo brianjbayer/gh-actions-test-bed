@@ -1,5 +1,5 @@
 version: '3.4'
 services:
   app:
-    build: .
+    image: brianjbayer/gh-actions-test-bed:${APP_IMAGE_TAG:-latest}
     container_name: ${APP_HOSTNAME:-app}

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# -------------------------------------------------
+# This simple script builds and pushes the image
+# named in the first argument...
+# (./.github/scripts/docker-build-push my-image:mytag)
+#
+# - Optional specify a $DOCKER_BUILD_TARGET
+# - Uses Docker Buildkit
+# - Pushes to Docker Hub Repository
+# - Assumes logged into Docker Hub
+# - Assumes a Dockerfile in the root directory
+# -------------------------------------------------
+
+# --- MAIN --- #
+# Exit script on any errors
+set -e
+
+# Image name argument is required
+if [ -z "$1" ]
+  then
+    echo "Error: You must specify an image name."
+    exit 86
+fi
+IMAGE_NAME="$1"
+
+echo 'Docker version...'
+docker --version
+
+# Use Docker buildkit for build
+DOCKER_BUILDKIT=1
+
+# Optionally specify a multistage build target in docker build
+if [ -z "$DOCKER_BUILD_TARGET" ]
+then
+  docker_build_command="docker build --no-cache -t ${IMAGE_NAME} ."
+else
+  docker_build_command="docker build --no-cache --target ${DOCKER_BUILD_TARGET} -t ${IMAGE_NAME} ."
+fi
+
+echo "Building image: [${docker_build_command}]..."
+${docker_build_command}
+
+echo 'Pushing image...'
+docker push ${IMAGE_NAME}

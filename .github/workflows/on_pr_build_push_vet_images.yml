@@ -1,0 +1,151 @@
+name: On PR Build Push Vet
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  BRANCH: ${{ github.head_ref }}
+  COMMIT: ${{ github.event.pull_request.head.sha }}
+
+  VETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}:${{ github.event.pull_request.head.sha }}
+  UNVETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
+  DEVENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+
+jobs:
+
+  git-info:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Git log
+        run: git log
+
+      - name: PR Branch
+        run: echo ${BRANCH}
+
+      - name: Last commit of PR branch
+        run: echo ${COMMIT}
+
+      - name: Show GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  build-and-push-branch-devenv:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILD_TARGET: devenv
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Dev environment image name
+        run: echo "Dev Environment Image [${DEVENV_IMAGE}]"
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Build and Push dev environment image
+        run: ./.github/scripts/docker-build-push ${DEVENV_IMAGE}
+
+      - name: Check originally no mutation to local
+        run: "[ ! -f foobear ]"
+
+      - name: Run and and mount source and mutate in the dev env
+        run: docker run --rm -v ${PWD}:/app ${DEVENV_IMAGE} touch foobear
+
+      - name: Check local is mutated after dev env exit
+        run: "[ -f foobear ]"
+
+      - name: Logout of DockerHub Registry
+        run: docker logout
+
+  build-and-push-branch-unvetted:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Unvetted deploy image name
+        run: echo "Unvetted deploy Image [${UNVETTED_IMAGE}]"
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Build and Push UNVETTED deploy image
+        run: ./.github/scripts/docker-build-push ${UNVETTED_IMAGE}
+
+      - name: Logout of DockerHub Registry
+        run: docker logout
+
+  vet-code-standards:
+    needs: build-and-push-branch-devenv
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: dockercomposerun rubocop on development environment
+        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec rake rubocop"
+
+  vet-dependency-security:
+    needs: build-and-push-branch-devenv
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: dockercomposerun bundle-audit on development environment
+        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec bundle-audit check --update"
+
+  vet-e2e-tests-deploy-image:
+    needs: build-and-push-branch-unvetted
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: dockercomposerun unvetted image
+        run: "USE_CI= APP_IMAGE=${UNVETTED_IMAGE} ./script/dockercomposerun"
+
+  vet-e2e-tests-devenv-image:
+    needs: build-and-push-branch-devenv
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: dockercomposerun devenv image
+        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec rspec"
+
+  push-vetted-deploy-image:
+    needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Unvetted deploy image name
+        run: echo "Unvetted deploy Image [${UNVETTED_IMAGE}]"
+
+      - name: Pull Unvetted deploy image
+        run: docker pull ${UNVETTED_IMAGE}
+
+      - name: Rename Unvetted deploy image
+        run: docker tag ${UNVETTED_IMAGE} ${VETTED_IMAGE}
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Push vetted deploy image
+        run: docker push ${VETTED_IMAGE}
+
+      - name: Logout of DockerHub Registry
+        run: docker logout
+
+
+

@@ -1,13 +1,21 @@
 #!/bin/sh
+
+# ----------------------------------------------------------------------
 # This script runs the project docker-compose framework.
 #
 # - The arguments to this script are passed to the browsertests service
-#   as command override
+#   as the command override
 #
 # - Any environment variables set when calling this script are passed
 #   through to the docker-compose framework
-#   (e.g. configuration other than the defaults
+#   (e.g. configuration other than the defaults)
 #
+# - Set environment variable USE_CI for specifying an APP_IMAGE
+#   and using the docker-compose CI environment (e.g. USE_CI= )
+#
+# - Set environment variable USE_DEVENV for specifying an APP_IMAGE
+#   and using the docker-compose dev environment (e.g. USE_DEVENV= )
+# ----------------------------------------------------------------------
 
 # Exit script on any errors
 set -e
@@ -24,7 +32,13 @@ echo ''
 
 echo 'DOCKER-COMPOSE COMMAND...'
 docker_compose_command='docker-compose -f docker-compose.yml '
-if [ ! -z ${APP_IMAGE} ]; then
+
+if [ ! -z ${USE_CI+set} ]; then
+  echo "...Using CI Environment with Image [${APP_IMAGE}]"
+  docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
+fi
+
+if [ ! -z ${USE_DEVENV+set} ]; then
   echo "...Using Development Environment with Image [${APP_IMAGE}]"
   docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
 fi
