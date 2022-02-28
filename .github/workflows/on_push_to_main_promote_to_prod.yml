@@ -68,6 +68,8 @@ jobs:
       BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
     steps:
+      - uses: actions/checkout@v1
+
       - name: Merged branch
         run: echo "BRANCH= [${BRANCH}]"
 
