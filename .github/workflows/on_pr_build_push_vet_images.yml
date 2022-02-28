@@ -122,7 +122,7 @@ jobs:
       - name: dockercomposerun devenv image
         run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec rspec"
 
-  push-vetted-deploy-image:
+  pull-and-push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
     runs-on: ubuntu-latest
 
@@ -146,6 +146,3 @@ jobs:
 
       - name: Logout of DockerHub Registry
         run: docker logout
-
-
-
