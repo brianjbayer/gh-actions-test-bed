@@ -78,20 +78,20 @@ jobs:
         run: echo "Unvetted deploy image [${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}]"
 
       - name: Pull branch last commit vetted deploy image
-        run: docker pull ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}
+        run: "docker pull ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}"
 
       - name: Promote (rename) to Prod commit-tagged deploy image
-        run: docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:{BRANCH_LAST_COMMIT}
+        run: "docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:{BRANCH_LAST_COMMIT}"
       - name: Promote (rename) to Prod latest deploy image
-        run: docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
+        run: "docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:latest"
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Push Prod commit-tagged deploy image
-        run: docker push ${GIT_REPO}:{BRANCH_LAST_COMMIT}
+        run: "docker push ${GIT_REPO}:{BRANCH_LAST_COMMIT}"
       - name: Push Prod latest deploy image
-        run: docker push ${GIT_REPO}:latest
+        run: "docker push ${GIT_REPO}:latest"
 
       - name: Logout of DockerHub Registry
         run: docker logout
