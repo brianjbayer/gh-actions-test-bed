@@ -58,7 +58,7 @@ jobs:
       - name: Output merged branch
         run: echo "SRC_TAG= [${BRANCH}]"
 
-  promote-branch-last-commit-vetted-to-prod:
+  promote-branch-last-commit-to-prod:
     needs: [merged-branch-last-commit, merged-branch-name]
     runs-on: ubuntu-latest
     env:
@@ -68,30 +68,26 @@ jobs:
       BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
     steps:
+      - name: Merged branch
+        run: echo "BRANCH= [${BRANCH}]"
+
       - name: Last commit of Merged branch
         run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Merged branch
-        run: echo "SRC_TAG= [${BRANCH}]"
-
       - name: Merged branch last commit vetted deploy image name
-        run: echo "Unvetted deploy image [${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}]"
+        run: echo "Pulling image [${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT}]"
 
-      - name: Pull branch last commit vetted deploy image
-        run: "docker pull ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT}"
-
-      - name: Promote (rename) to Prod commit-tagged deploy image
-        run: "docker tag ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:${BRANCH_LAST_COMMIT}"
-      - name: Promote (rename) to Prod latest deploy image
-        run: "docker tag ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest"
+      - name: Prod commit-tagged image name
+        run: echo "Pushing image [${GIT_REPO}:${BRANCH_LAST_COMMIT}]"
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - name: Push Prod commit-tagged deploy image
-        run: "docker push ${GIT_REPO}:${BRANCH_LAST_COMMIT}"
-      - name: Push Prod latest deploy image
-        run: "docker push ${GIT_REPO}:latest"
+      - name: Pull Merged branch last commit vetted deploy image and Push to commit-tagged Prod
+        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:${BRANCH_LAST_COMMIT}
+
+      - name: Pull Merged branch last commit vetted deploy image and Push to Prod latest
+        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
 
       - name: Logout of DockerHub Registry
         run: docker logout
