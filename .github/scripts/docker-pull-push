@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# -------------------------------------------------
+# This simple script...
+# 1. Pulls the image named in  the first argument
+# 2. Renames the image to the second argument
+# 3. Pushes it to the repository 
+# (./.github/scripts/docker-pull-and-push 
+#  my-image:mytag new-my-image:new-my-tag)
+#
+# - Pulls and Pushes to Docker Hub Repository
+# - Assumes logged into Docker Hub
+# - Assumes a Dockerfile in the root directory
+# -------------------------------------------------
+
+# --- MAIN --- #
+# Exit script on any errors
+set -e
+
+# Pull image name argument is required
+if [ -z "$1" ]
+  then
+    echo "Error: You must specify an image name to pull (and push)."
+    exit 86
+fi
+pull_image="$1"
+
+# Push image name argument is required
+if [ -z "$2" ]
+  then
+    echo "Error: You must specify an image name to push."
+    exit 87
+fi
+push_image="$2"
+
+echo 'Docker version...'
+docker --version
+
+echo "Pulling image: [${pull_image}]..."
+docker pull ${pull_image}
+
+echo "Renaming image [${pull_image}] to [${push_image}]..."
+docker tag ${pull_image} ${push_image}
+
+echo "Pushing image [${push_image}]..."
+docker push ${push_image}
