@@ -1,36 +1,26 @@
-name: Push to Main
-
+name: On Merge Promote Branch Image to Prod
 on:
   push:
     branches:
       - main
 
-env:
-  # Use Docker Buildkit for builds
-  DOCKER_BUILDKIT: 1
-
 jobs:
-  git-log:
+  git-info:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
+
       - name: Git log
         run: git log
 
-  git-context:
-    runs-on: ubuntu-latest
-    steps:
+      - name: Last commit message of PR branch
+        run: echo "Message is... [${{ github.event.head_commit.message }}]"
+
       - name: Show GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
-
-  git-commit-message:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Last commit of PR branch
-        run: echo "Message is... [${{ github.event.head_commit.message }}]"
 
   merged-branch-last-commit:
     runs-on: ubuntu-latest
@@ -54,22 +44,54 @@ jobs:
         id: getbranch
         run: echo "::set-output name=branchname::$(./.github/scripts/branch-name-from-merge-msg)"
 
-  output-stuff:
+  branch-and-last-commit-merged-info:
     needs: [merged-branch-last-commit, merged-branch-name]
     runs-on: ubuntu-latest
     env:
-      SRC_TAG: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
-      SRC_BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
+      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
     steps:
-      - name: Output tag in later job
-        run: echo "The src tag = [${{ needs.merged-branch-last-commit.outputs.branch-commit }}]"
+      - name: Output last commit of merged branch
+        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Output tag in later job as env var
-        run: echo "SRC_TAG= [${SRC_TAG}]"
+      - name: Output merged branch
+        run: echo "SRC_TAG= [${BRANCH}]"
 
-      - name: Output branch in later job
-        run: echo "The src branch = [${{ needs.merged-branch-name.outputs.branch-name }}]"
+  promote-branch-last-commit-vetted-to-prod:
+    needs: [merged-branch-last-commit, merged-branch-name]
+    runs-on: ubuntu-latest
+    env:
+      env:
+      GIT_REPO: ${{ github.repository }}
+      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
-      - name: Output branch in later job as env var
-        run: echo "SRC_TAG= [${SRC_BRANCH}]"
+    steps:
+      - name: Last commit of Merged branch
+        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+
+      - name: Merged branch
+        run: echo "SRC_TAG= [${BRANCH}]"
+
+      - name: Merged branch last commit vetted deploy image name
+        run: echo "Unvetted deploy image [${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}]"
+
+      - name: Pull branch last commit vetted deploy image
+        run: docker pull ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT}
+
+      - name: Promote (rename) to Prod commit-tagged deploy image
+        run: docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:{BRANCH_LAST_COMMIT}
+      - name: Promote (rename) to Prod latest deploy image
+        run: docker tag ${GIT_REPO}_${BRANCH}:{BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Push Prod commit-tagged deploy image
+        run: docker push ${GIT_REPO}:{BRANCH_LAST_COMMIT}
+      - name: Push Prod latest deploy image
+        run: docker push ${GIT_REPO}:latest
+
+      - name: Logout of DockerHub Registry
+        run: docker logout
