@@ -89,7 +89,7 @@ jobs:
         run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:${BRANCH_LAST_COMMIT}
 
       - name: Pull Merged branch last commit vetted deploy image and Push to Prod latest
-        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
+        run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
 
       - name: Logout of DockerHub Registry
         run: docker logout
@@ -125,7 +125,7 @@ jobs:
         run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:${BRANCH_LAST_COMMIT}
 
       - name: Pull Merged branch last commit dev environment image and Push to dev environment latest
-        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:latest
+        run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:latest
 
       - name: Logout of DockerHub Registry
         run: docker logout
