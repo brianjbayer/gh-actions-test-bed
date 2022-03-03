@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: dockercomposerun rubocop on development environment
-        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec rake rubocop"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
 
   vet-dependency-security:
     needs: build-and-push-branch-devenv
@@ -100,7 +100,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: dockercomposerun bundle-audit on development environment
-        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec bundle-audit check --update"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec bundle-audit check --update"
 
   vet-e2e-tests-deploy-image:
     needs: build-and-push-branch-unvetted
@@ -110,7 +110,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: dockercomposerun unvetted image
-        run: "USE_CI= APP_IMAGE=${UNVETTED_IMAGE} ./script/dockercomposerun"
+        run: "APP_IMAGE=${UNVETTED_IMAGE} ./script/dockercomposerun -c"
 
   vet-e2e-tests-devenv-image:
     needs: build-and-push-branch-devenv
@@ -120,7 +120,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: dockercomposerun devenv image
-        run: "USE_DEVENV= APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun bundle exec rspec"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rspec"
 
   push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]

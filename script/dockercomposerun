@@ -10,15 +10,44 @@
 #   through to the docker-compose framework
 #   (e.g. configuration other than the defaults)
 #
-# - Set environment variable USE_CI for specifying an APP_IMAGE
-#   and using the docker-compose CI environment (e.g. USE_CI= )
-#
-# - Set environment variable USE_DEVENV for specifying an APP_IMAGE
-#   and using the docker-compose dev environment (e.g. USE_DEVENV= )
+# OPTIONS:
+# -c: Use the docker-compose CI environment with APP_IMAGE
+# -d: Use the docker-compose Dev environment with APP_IMAGE
 # ----------------------------------------------------------------------
 
+usage() {
+  echo "Usage: $0 [-cd] [CMD]"
+}
+
+err_exit() {
+  local err_msg="$1"
+  local err_code=$2
+  echo "${err_msg}  --  Exit:[${err_code}]" 1>&2
+  usage
+  exit $err_code
+}
+
+# --- MAIN --- #
 # Exit script on any errors
 set -e
+
+# Handle options
+while getopts ":cd" options; do
+  case "${options}" in
+    c)
+      echo "CI Environment"
+      ci=true
+      ;;
+    d)
+      echo "Development Environment"
+      devenv=true
+      ;;
+    \?)
+    err_exit "Invalid Option: -$OPTARG" 1
+      ;;
+  esac
+done
+shift $((OPTIND-1))
 
 echo ''
 echo "ENVIRONMENT VARIABLES..."
@@ -30,15 +59,16 @@ docker --version
 docker-compose --version
 echo ''
 
+# Override docker compose environments
 echo 'DOCKER-COMPOSE COMMAND...'
 docker_compose_command='docker-compose -f docker-compose.yml '
 
-if [ ! -z ${USE_CI+set} ]; then
+if [ ! -z ${ci} ]; then
   echo "...Using CI Environment with Image [${APP_IMAGE}]"
   docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
 fi
 
-if [ ! -z ${USE_DEVENV+set} ]; then
+if [ ! -z ${devenv} ]; then
   echo "...Using Development Environment with Image [${APP_IMAGE}]"
   docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
 fi
