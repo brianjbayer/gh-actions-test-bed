@@ -1,0 +1,36 @@
+name: Build Push Commit-tagged Branch Image
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+      build_opts:
+    secrets:
+      registry_u:
+        required: true
+      registry_p:
+        required: true
+
+jobs:
+
+  build-and-push-branch-image:
+    name: (Idempotent) Build and Push Commit-Tagged Branch Image
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ inputs.image }}
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Image name
+        run: echo "Image name [${IMAGE}]"
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.registry_p }} | docker login -u ${{ secrets.registry_u }} --password-stdin
+
+      - name: If not pull image, build and push image
+        run: docker pull ${IMAGE} || (docker build -t ${IMAGE} . && docker push ${IMAGE})
+
+      - name: Logout of DockerHub Registry
+        run: docker logout

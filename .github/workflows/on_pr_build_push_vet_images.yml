@@ -65,22 +65,24 @@ jobs:
         run: docker logout
 
   build-and-push-branch-unvetted:
-    runs-on: ubuntu-latest
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
+    with:
+      image: ${UNVETTED_IMAGE}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-    steps:
-      - uses: actions/checkout@v1
+      # - name: Unvetted deploy image name
+      #   run: echo "Unvetted deploy Image [${UNVETTED_IMAGE}]"
 
-      - name: Unvetted deploy image name
-        run: echo "Unvetted deploy Image [${UNVETTED_IMAGE}]"
+      # - name: Login to DockerHub Registry
+      #   run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      # - name: Build and Push UNVETTED deploy image
+      #   run: ./.github/scripts/docker-build-push ${UNVETTED_IMAGE}
 
-      - name: Build and Push UNVETTED deploy image
-        run: ./.github/scripts/docker-build-push ${UNVETTED_IMAGE}
-
-      - name: Logout of DockerHub Registry
-        run: docker logout
+      # - name: Logout of DockerHub Registry
+      #   run: docker logout
 
   vet-code-standards:
     needs: build-and-push-branch-devenv
