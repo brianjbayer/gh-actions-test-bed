@@ -5,8 +5,9 @@ on:
     inputs:
       image:
         required: true
-      build_opts:
-        required: false
+        type: string
+      buildopts:
+        type: string
     secrets:
       registry_u:
         required: true
