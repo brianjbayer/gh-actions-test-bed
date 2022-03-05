@@ -35,7 +35,6 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
           BUILDOPTS: "${{ inputs.buildopts }}"
-        run: docker pull ${IMAGE} || (docker build --no-cache ${BUILDOPTS} -t ${IMAGE_NAME} . && docker push ${IMAGE})
-
+        run: docker pull ${IMAGE} || (docker build --no-cache ${BUILDOPTS} -t ${IMAGE} . && docker push ${IMAGE})
       - name: Logout of DockerHub Registry
         run: docker logout
