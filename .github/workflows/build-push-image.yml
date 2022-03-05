@@ -21,7 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: ${{ inputs.image }}
-      BUILDOPTS: ${{ inputs.buildopts }}
 
     steps:
       - uses: actions/checkout@v1
@@ -35,6 +34,7 @@ jobs:
       - name: If not pull image, build and push image
         env:
           DOCKER_BUILDKIT: 1
+          BUILDOPTS: "${{ inputs.buildopts }}"
         run: docker pull ${IMAGE} || (docker build --no-cache ${BUILDOPTS} -t ${IMAGE_NAME} . && docker push ${IMAGE})
 
       - name: Logout of DockerHub Registry
