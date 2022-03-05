@@ -17,7 +17,7 @@ on:
 jobs:
 
   build-and-push-branch-image:
-    name: (Idempotent) Build and Push Commit-Tagged Branch Image
+    name: Build and Push Commit-Tagged Branch Image Idempotent
     runs-on: ubuntu-latest
     env:
       IMAGE: ${{ inputs.image }}
