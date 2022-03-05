@@ -1,4 +1,4 @@
-name: Build Push Commit-tagged Branch Image
+name: Idempotent Build Push Image
 
 on:
   workflow_call:
@@ -16,8 +16,8 @@ on:
 
 jobs:
 
-  build-and-push-branch-image:
-    name: Build and Push Commit-Tagged Branch Image Idempotent
+  pull-or-build-and-push-image:
+    name: Pull or Build and Push Image
     runs-on: ubuntu-latest
     env:
       IMAGE: ${{ inputs.image }}
@@ -32,6 +32,8 @@ jobs:
         run: echo ${{ secrets.registry_p }} | docker login -u ${{ secrets.registry_u }} --password-stdin
 
       - name: If not pull image, build and push image
+        env:
+          DOCKER_BUILDKIT: 1
         run: docker pull ${IMAGE} || (docker build -t ${IMAGE} . && docker push ${IMAGE})
 
       - name: Logout of DockerHub Registry
