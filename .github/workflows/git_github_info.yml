@@ -17,7 +17,7 @@ jobs:
         run: echo "$(git log -1 --format="%H" | grep -v -e '^$')"
 
       - name: Last git commit message
-        run: echo "echo "$(git log -1 --format="%B" | grep -v -e '^$')"
+        run: echo "$(git log -1 --format="%B" | grep -v -e '^$')"
 
       - name: Show GitHub context
         env:
