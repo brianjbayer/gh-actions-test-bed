@@ -18,25 +18,6 @@ jobs:
   this-could-go-git-info:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
 
-    # runs-on: ubuntu-latest
-
-    # steps:
-    #   - uses: actions/checkout@v1
-
-    #   - name: Git log
-    #     run: git log
-
-    #   - name: PR Branch
-    #     run: echo ${BRANCH}
-
-    #   - name: Last commit of PR branch
-    #     run: echo ${COMMIT}
-
-    #   - name: Show GitHub context
-    #     env:
-    #       GITHUB_CONTEXT: ${{ toJson(github) }}
-    #     run: echo "$GITHUB_CONTEXT"
-
   build-and-push-branch-devenv:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
     with:
@@ -46,8 +27,23 @@ jobs:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+  build-and-push-branch-unvetted:
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
+    with:
+      image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  vet-devenv-mutable:
+    needs: build-and-push-branch-devenv
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@reusable-workflows
+    with:
+      image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+    # runs-on: ubuntu-latest
     # steps:
-    #   - uses: actions/checkout@v1
+    #   - name: Pull Dev environment image
+    #     run: docker pull ${DEVENV_IMAGE}
 
     #   - name: Check originally no mutation to local
     #     run: "[ ! -f foobear ]"
@@ -58,21 +54,17 @@ jobs:
     #   - name: Check local is mutated after dev env exit
     #     run: "[ -f foobear ]"
 
-  build-and-push-branch-unvetted:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
-    with:
-      image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
-    secrets:
-      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
-      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
   vet-code-standards:
     needs: build-and-push-branch-devenv
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: dockercomposerun rubocop on development environment
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/run-command-with-image.yml@reusable-workflows
+    with:
+      image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+      command: "APP_IMAGE=${IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
+    # runs-on: ubuntu-latest
+    # steps:
+    #   - uses: actions/checkout@v1
+    #   - name: dockercomposerun rubocop on development environment
+    #     run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
 
   vet-dependency-security:
     needs: build-and-push-branch-devenv
