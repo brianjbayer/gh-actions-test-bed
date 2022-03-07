@@ -16,24 +16,26 @@ env:
 jobs:
 
   this-could-go-git-info:
-    runs-on: ubuntu-latest
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
 
-    steps:
-      - uses: actions/checkout@v1
+    # runs-on: ubuntu-latest
 
-      - name: Git log
-        run: git log
+    # steps:
+    #   - uses: actions/checkout@v1
 
-      - name: PR Branch
-        run: echo ${BRANCH}
+    #   - name: Git log
+    #     run: git log
 
-      - name: Last commit of PR branch
-        run: echo ${COMMIT}
+    #   - name: PR Branch
+    #     run: echo ${BRANCH}
 
-      - name: Show GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+    #   - name: Last commit of PR branch
+    #     run: echo ${COMMIT}
+
+    #   - name: Show GitHub context
+    #     env:
+    #       GITHUB_CONTEXT: ${{ toJson(github) }}
+    #     run: echo "$GITHUB_CONTEXT"
 
   build-and-push-branch-devenv:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
