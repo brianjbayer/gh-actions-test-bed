@@ -19,7 +19,7 @@ jobs:
   #   uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
 
   build-and-push-branch-devenv:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@b577f64399e532e7c1421402b0acb6c0e73f7a67
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
       buildopts: --target devenv
@@ -28,7 +28,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   build-and-push-branch-unvetted:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@b577f64399e532e7c1421402b0acb6c0e73f7a67
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
     secrets:
@@ -37,7 +37,7 @@ jobs:
 
   vet-devenv-mutable:
     needs: build-and-push-branch-devenv
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@b577f64399e532e7c1421402b0acb6c0e73f7a67
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
@@ -75,7 +75,7 @@ jobs:
 
   push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@b577f64399e532e7c1421402b0acb6c0e73f7a67
     with:
       # Pull unvetted branch image
       pull_as: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
@@ -87,7 +87,7 @@ jobs:
 
   push-branch-vetted-latest-image:
     needs: [push-branch-vetted-deploy-image]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@b577f64399e532e7c1421402b0acb6c0e73f7a67
     with:
       # Pull unvetted branch image
       image_name: ${{ github.repository }}_${{ github.head_ref }}
