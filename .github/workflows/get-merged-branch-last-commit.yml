@@ -19,6 +19,7 @@ jobs:
       branch: ${{ steps.getbranch.outputs.branch }}
       commit: ${{ steps.getcommit.outputs.commit }}
     steps:
+      - uses: actions/checkout@v1
       - id: getbranch
         run: echo "::set-output name=branch::$(git log -1 --pretty=%B | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | grep -v -e '^$')"
       - id: getcommit
