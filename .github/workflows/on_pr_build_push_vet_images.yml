@@ -85,14 +85,15 @@ jobs:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-  push-branch-vetted-latest-image:
-    needs: [push-branch-vetted-deploy-image]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
-    with:
-      # Pull unvetted branch image
-      image_name: ${{ github.repository }}_${{ github.head_ref }}
-      # Push Vetted Image
-      image_tag: ${{ github.event.pull_request.head.sha }}
-    secrets:
-      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
-      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+# This is for testing only
+  # push-branch-vetted-latest-image:
+  #   needs: [push-branch-vetted-deploy-image]
+  #   uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
+  #   with:
+  #     # Pull unvetted branch image
+  #     image_name: ${{ github.repository }}_${{ github.head_ref }}
+  #     # Push Vetted Image
+  #     image_tag: ${{ github.event.pull_request.head.sha }}
+  #   secrets:
+  #     registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+  #     registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}

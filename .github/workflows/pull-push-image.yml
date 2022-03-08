@@ -29,7 +29,7 @@ jobs:
         run: echo "Pull as image name [${PULL_AS}]"
 
       - name: Push as image name
-        run: echo "Pull as image name [${PUSH_AS}]"
+        run: echo "Push as image name [${PUSH_AS}]"
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.registry_p }} | docker login -u ${{ secrets.registry_u }} --password-stdin

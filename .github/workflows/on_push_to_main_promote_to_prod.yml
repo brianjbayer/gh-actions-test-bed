@@ -5,22 +5,6 @@ on:
       - main
 
 jobs:
-  # git-info:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v1
-
-  #     - name: Git log
-  #       run: git log
-
-  #     - name: Last commit message of PR branch
-  #       run: echo "Message is... [${{ github.event.head_commit.message }}]"
-
-  #     - name: Show GitHub context
-  #       env:
-  #         GITHUB_CONTEXT: ${{ toJson(github) }}
-  #       run: echo "$GITHUB_CONTEXT"
 
   # merged-branch-last-commit:
   #   runs-on: ubuntu-latest
@@ -72,7 +56,7 @@ jobs:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
     with:
       # Pull last vetted branch image
-      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_vetted:${{ needs.branch-and-last-commit.outputs.commit }}
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}:${{ needs.branch-and-last-commit.outputs.commit }}
       # Push prod Image
       push_as: ${{ github.repository }}:${{ needs.branch-and-last-commit.outputs.commit }}
     secrets:
@@ -127,7 +111,7 @@ jobs:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
     with:
       # Pull last branch devenv image
-      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_dev:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_dev:${{ needs.branch-and-last-commit.outputs.commit }}
       # Push prod devenv image
       push_as: ${{ github.repository }}-dev:${{ needs.branch-and-last-commit.outputs.commit }}
     secrets:
