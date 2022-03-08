@@ -19,7 +19,7 @@ jobs:
   #   uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
 
   build-and-push-branch-devenv:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
       buildopts: --target devenv
@@ -28,7 +28,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   build-and-push-branch-unvetted:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
     secrets:
@@ -37,7 +37,7 @@ jobs:
 
   vet-devenv-mutable:
     needs: build-and-push-branch-devenv
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
@@ -75,7 +75,7 @@ jobs:
 
   push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@ff3836ccb0b8f8dddedc1b7790d450ab4e9e53dd
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       # Pull unvetted branch image
       pull_as: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
