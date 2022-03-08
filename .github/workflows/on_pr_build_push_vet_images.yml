@@ -15,8 +15,8 @@ env:
 
 jobs:
 
-  this-could-go-git-info:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
+  # this-could-go-git-info:
+  #   uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
 
   build-and-push-branch-devenv:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/build-push-image.yml@reusable-workflows
@@ -40,31 +40,14 @@ jobs:
     uses: brianjbayer/gh-actions-test-bed/.github/workflows/vet-image-mutable.yml@reusable-workflows
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
-    # runs-on: ubuntu-latest
-    # steps:
-    #   - name: Pull Dev environment image
-    #     run: docker pull ${DEVENV_IMAGE}
-
-    #   - name: Check originally no mutation to local
-    #     run: "[ ! -f foobear ]"
-
-    #   - name: Run and and mount source and mutate in the dev env
-    #     run: docker run --rm -v ${PWD}:/app ${DEVENV_IMAGE} touch foobear
-
-    #   - name: Check local is mutated after dev env exit
-    #     run: "[ -f foobear ]"
 
   vet-code-standards:
     needs: build-and-push-branch-devenv
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/run-command-with-image.yml@reusable-workflows
-    with:
-      image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
-      command: "APP_IMAGE=${IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
-    # runs-on: ubuntu-latest
-    # steps:
-    #   - uses: actions/checkout@v1
-    #   - name: dockercomposerun rubocop on development environment
-    #     run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun rubocop on development environment
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
 
   vet-dependency-security:
     needs: build-and-push-branch-devenv
@@ -98,6 +81,18 @@ jobs:
       pull_as: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
       # Push Vetted Image
       push_as: ${{ github.repository }}_${{ github.head_ref }}:${{ github.event.pull_request.head.sha }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  push-branch-vetted-latest-image:
+    needs: [push-branch-vetted-deploy-image]
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@reusable-workflows
+    with:
+      # Pull unvetted branch image
+      image_name: ${{ github.repository }}_${{ github.head_ref }}
+      # Push Vetted Image
+      image_tag: ${{ github.event.pull_request.head.sha }}
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
