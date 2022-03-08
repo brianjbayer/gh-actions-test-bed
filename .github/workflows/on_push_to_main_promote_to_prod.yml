@@ -55,12 +55,17 @@ jobs:
       BRANCH: ${{ needs.branch-and-last-commit.outputs.branch }}
 
     steps:
-      - name: Output last commit of merged branch
-        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+      - name: Output last commit of merged branch env var
+        run: echo "BRANCH_LAST_COMMIT=[${BRANCH_LAST_COMMIT}]"
 
-      - name: Output merged branch
-        run: echo "SRC_TAG= [${BRANCH}]"
+      - name: Output last commit of merged branch raw
+        run: echo "BRANCH LAST COMMIT is [${{ needs.branch-and-last-commit.outputs.commit }}]"
 
+      - name: Output merged branch env var
+        run: echo "BRANCH=[${BRANCH}]"
+
+      - name: Output merged branch raw
+        run: echo "BRANCH=[${BRANCH}]"
 
   promote-branch-last-commit-to-prod:
     needs: [branch-and-last-commit]
