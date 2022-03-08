@@ -44,26 +44,26 @@ jobs:
   #       id: getbranch
   #       run: echo "::set-output name=branchname::$(./.github/scripts/branch-name-from-merge-msg)"
 
-  branch-and-last-commit-merged-info:
-    needs: [merged-branch-last-commit, merged-branch-name]
-    runs-on: ubuntu-latest
-    env:
-      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
-      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
+  # branch-and-last-commit-merged-info:
+  #   needs: [merged-branch-last-commit, merged-branch-name]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+  #     BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
-    steps:
-      - name: Output last commit of merged branch
-        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+  #   steps:
+  #     - name: Output last commit of merged branch
+  #       run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Output merged branch
-        run: echo "SRC_TAG= [${BRANCH}]"
+  #     - name: Output merged branch
+  #       run: echo "SRC_TAG= [${BRANCH}]"
 
   branch-and-last-commit-to-prod:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/get-merged-branch-last-commit.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/get-merged-branch-last-commit.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
 
   promote-branch-last-commit-to-prod:
     needs: [branch-and-last-commit-to-prod]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
     with:
       # Pull last vetted branch image
       pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit-to-prod.outputs.branch }}_vetted:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
@@ -108,7 +108,7 @@ jobs:
 
   promote-branch-last-commit-devenv:
     needs: [branch-and-last-commit-to-prod]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@reusable-workflows
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
     with:
       # Pull last branch devenv image
       pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit-to-prod.outputs.branch }}_dev:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
