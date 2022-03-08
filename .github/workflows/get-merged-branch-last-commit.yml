@@ -1,0 +1,25 @@
+name: Merged Branch and Last Commit SHA of Branch
+
+on:
+  workflow_call:
+
+    # Map the workflow outputs to job outputs
+    outputs:
+      merged_branch:
+        value: ${{ jobs.merged-branch-commit.outputs.branch }}
+      branch_last_commmit:
+        value: ${{ jobs.merged-branch-commit.outputs.commit }}
+
+jobs:
+  merged-branch-commit:
+    name: Generate  brancoutput
+    runs-on: ubuntu-latest
+    # Map the job outputs to step outputs
+    outputs:
+      branch: ${{ steps.getbranch.outputs.branch }}
+      commit: ${{ steps.getcommit.outputs.commit }}
+    steps:
+      - id: getbranch
+        run: echo "::set-output name=branch::$(git log -1 --pretty=%B | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | grep -v -e '^$')"
+      - id: getcommit
+        run: echo "::set-output name=commit::$(git log -n 1 --skip 1 --pretty=format:"%H")"

@@ -5,127 +5,149 @@ on:
       - main
 
 jobs:
-  git-info:
-    runs-on: ubuntu-latest
+  # git-info:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v1
+  #   steps:
+  #     - uses: actions/checkout@v1
 
-      - name: Git log
-        run: git log
+  #     - name: Git log
+  #       run: git log
 
-      - name: Last commit message of PR branch
-        run: echo "Message is... [${{ github.event.head_commit.message }}]"
+  #     - name: Last commit message of PR branch
+  #       run: echo "Message is... [${{ github.event.head_commit.message }}]"
 
-      - name: Show GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+  #     - name: Show GitHub context
+  #       env:
+  #         GITHUB_CONTEXT: ${{ toJson(github) }}
+  #       run: echo "$GITHUB_CONTEXT"
 
-  merged-branch-last-commit:
-    runs-on: ubuntu-latest
-    outputs:
-      branch-commit: ${{ steps.getcommit.outputs.lastcommit }}
+  # merged-branch-last-commit:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     branch-commit: ${{ steps.getcommit.outputs.lastcommit }}
 
-    steps:
-      - uses: actions/checkout@v1
-      - name: Get last commit of merged branch
-        id: getcommit
-        run: echo "::set-output name=lastcommit::$(git log -n 1 --skip 1 --pretty=format:"%H")"
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Get last commit of merged branch
+  #       id: getcommit
+  #       run: echo "::set-output name=lastcommit::$(git log -n 1 --skip 1 --pretty=format:"%H")"
 
-  merged-branch-name:
-    runs-on: ubuntu-latest
-    outputs:
-      branch-name: ${{ steps.getbranch.outputs.branchname }}
+  # merged-branch-name:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     branch-name: ${{ steps.getbranch.outputs.branchname }}
 
-    steps:
-      - uses: actions/checkout@v1
-      - name: Get merged branch name from merge commit message
-        id: getbranch
-        run: echo "::set-output name=branchname::$(./.github/scripts/branch-name-from-merge-msg)"
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Get merged branch name from merge commit message
+  #       id: getbranch
+  #       run: echo "::set-output name=branchname::$(./.github/scripts/branch-name-from-merge-msg)"
 
-  branch-and-last-commit-merged-info:
-    needs: [merged-branch-last-commit, merged-branch-name]
-    runs-on: ubuntu-latest
-    env:
-      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
-      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
+  # branch-and-last-commit-merged-info:
+  #   needs: [merged-branch-last-commit, merged-branch-name]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+  #     BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
-    steps:
-      - name: Output last commit of merged branch
-        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+  #   steps:
+  #     - name: Output last commit of merged branch
+  #       run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Output merged branch
-        run: echo "SRC_TAG= [${BRANCH}]"
+  #     - name: Output merged branch
+  #       run: echo "SRC_TAG= [${BRANCH}]"
+
+  branch-and-last-commit-to-prod:
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/get-merged-branch-last-commit.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
 
   promote-branch-last-commit-to-prod:
-    needs: [merged-branch-last-commit, merged-branch-name]
-    runs-on: ubuntu-latest
-    env:
-      env:
-      GIT_REPO: ${{ github.repository }}
-      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
-      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
+    needs: [branch-and-last-commit-to-prod]
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
+    with:
+      # Pull last vetted branch image
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit-to-prod.outputs.branch }}_vetted:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+      # Push prod Image
+      push_as: ${{ github.repository }}:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    # runs-on: ubuntu-latest
+    # env:
+    #   env:
+    #   GIT_REPO: ${{ github.repository }}
+    #   BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+    #   BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
-    steps:
-      - uses: actions/checkout@v1
+    # steps:
+    #   - uses: actions/checkout@v1
 
-      - name: Merged branch
-        run: echo "BRANCH= [${BRANCH}]"
+    #   - name: Merged branch
+    #     run: echo "BRANCH= [${BRANCH}]"
 
-      - name: Last commit of Merged branch
-        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+    #   - name: Last commit of Merged branch
+    #     run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Merged branch last commit vetted deploy image name
-        run: echo "Pulling image [${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT}]"
+    #   - name: Merged branch last commit vetted deploy image name
+    #     run: echo "Pulling image [${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT}]"
 
-      - name: Prod commit-tagged image name
-        run: echo "Pushing image [${GIT_REPO}:${BRANCH_LAST_COMMIT}]"
+    #   - name: Prod commit-tagged image name
+    #     run: echo "Pushing image [${GIT_REPO}:${BRANCH_LAST_COMMIT}]"
 
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+    #   - name: Login to DockerHub Registry
+    #     run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - name: Pull Merged branch last commit vetted deploy image and Push to commit-tagged Prod
-        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:${BRANCH_LAST_COMMIT}
+    #   - name: Pull Merged branch last commit vetted deploy image and Push to commit-tagged Prod
+    #     run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:${BRANCH_LAST_COMMIT}
 
-      - name: Pull Merged branch last commit vetted deploy image and Push to Prod latest
-        run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
+    #   - name: Pull Merged branch last commit vetted deploy image and Push to Prod latest
+    #     run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}:${BRANCH_LAST_COMMIT} ${GIT_REPO}:latest
 
-      - name: Logout of DockerHub Registry
-        run: docker logout
+    #   - name: Logout of DockerHub Registry
+    #     run: docker logout
 
   promote-branch-last-commit-devenv:
-    needs: [merged-branch-last-commit, merged-branch-name]
-    runs-on: ubuntu-latest
-    env:
-      env:
-      GIT_REPO: ${{ github.repository }}
-      BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
-      BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
+    needs: [branch-and-last-commit-to-prod]
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@77bc83b75d0fab6125712f4ecdc78cab2f7febc4
+    with:
+      # Pull last branch devenv image
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit-to-prod.outputs.branch }}_dev:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+      # Push prod devenv image
+      push_as: ${{ github.repository }}-dev:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    # needs: [merged-branch-last-commit, merged-branch-name]
+    # runs-on: ubuntu-latest
+    # env:
+    #   env:
+    #   GIT_REPO: ${{ github.repository }}
+    #   BRANCH_LAST_COMMIT: ${{ needs.merged-branch-last-commit.outputs.branch-commit }}
+    #   BRANCH: ${{ needs.merged-branch-name.outputs.branch-name }}
 
-    steps:
-      - uses: actions/checkout@v1
+    # steps:
+    #   - uses: actions/checkout@v1
 
-      - name: Merged branch
-        run: echo "BRANCH= [${BRANCH}]"
+    #   - name: Merged branch
+    #     run: echo "BRANCH= [${BRANCH}]"
 
-      - name: Last commit of Merged branch
-        run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
+    #   - name: Last commit of Merged branch
+    #     run: echo "BRANCH_LAST_COMMIT= [${BRANCH_LAST_COMMIT}]"
 
-      - name: Merged branch last commit dev environment image name
-        run: echo "Pulling image [${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT}]"
+    #   - name: Merged branch last commit dev environment image name
+    #     run: echo "Pulling image [${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT}]"
 
-      - name: Devenv commit-tagged image name
-        run: echo "Pushing image [${GIT_REPO}-dev:${BRANCH_LAST_COMMIT}]"
+    #   - name: Devenv commit-tagged image name
+    #     run: echo "Pushing image [${GIT_REPO}-dev:${BRANCH_LAST_COMMIT}]"
 
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+    #   - name: Login to DockerHub Registry
+    #     run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - name: Pull Merged branch last commit dev environment image and Push to commit-tagged dev environment
-        run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:${BRANCH_LAST_COMMIT}
+    #   - name: Pull Merged branch last commit dev environment image and Push to commit-tagged dev environment
+    #     run: ./.github/scripts/docker-pull-push ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:${BRANCH_LAST_COMMIT}
 
-      - name: Pull Merged branch last commit dev environment image and Push to dev environment latest
-        run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:latest
+    #   - name: Pull Merged branch last commit dev environment image and Push to dev environment latest
+    #     run: ./.github/scripts/docker-pull-push -f ${GIT_REPO}_${BRANCH}_dev:${BRANCH_LAST_COMMIT} ${GIT_REPO}-dev:latest
 
-      - name: Logout of DockerHub Registry
-        run: docker logout
+    #   - name: Logout of DockerHub Registry
+    #     run: docker logout
