@@ -5,9 +5,9 @@ on:
 
     # Map the workflow outputs to job outputs
     outputs:
-      merged_branch:
+      branch:
         value: ${{ jobs.merged-branch-commit.outputs.branch }}
-      branch_last_commmit:
+      commit:
         value: ${{ jobs.merged-branch-commit.outputs.commit }}
 
 jobs:
@@ -19,6 +19,11 @@ jobs:
       branch: ${{ steps.getbranch.outputs.branch }}
       commit: ${{ steps.getcommit.outputs.commit }}
     steps:
+      - name: Output get branch
+        run: echo "$(git log -1 --pretty=%B | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | grep -v -e '^$')"
+      - name: Output get last commit
+        run: echo "$(git log -n 1 --skip 1 --pretty=format:"%H")"
+
       - uses: actions/checkout@v1
       - id: getbranch
         run: echo "::set-output name=branch::$(git log -1 --pretty=%B | awk -F '\\\\n' '{print $1}' |  awk -F '/' '{print $2}' | grep -v -e '^$')"
