@@ -30,7 +30,7 @@ jobs:
         run: echo "Pull as image name [${IMAGE_NAME}:${IMAGE_TAG}]"
 
       - name: Push as image name latest
-        run: echo "Pull as image name [${IMAGE_NAME}:${LATEST_TAG}]"
+        run: echo "Push as image name [${IMAGE_NAME}:${LATEST_TAG}]"
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.registry_p }} | docker login -u ${{ secrets.registry_u }} --password-stdin

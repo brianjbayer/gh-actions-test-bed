@@ -5,22 +5,6 @@ on:
       - main
 
 jobs:
-  # git-info:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v1
-
-  #     - name: Git log
-  #       run: git log
-
-  #     - name: Last commit message of PR branch
-  #       run: echo "Message is... [${{ github.event.head_commit.message }}]"
-
-  #     - name: Show GitHub context
-  #       env:
-  #         GITHUB_CONTEXT: ${{ toJson(github) }}
-  #       run: echo "$GITHUB_CONTEXT"
 
   # merged-branch-last-commit:
   #   runs-on: ubuntu-latest
@@ -45,7 +29,7 @@ jobs:
   #       run: echo "::set-output name=branchname::$(./.github/scripts/branch-name-from-merge-msg)"
 
   branch-and-last-commit:
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/get-merged-branch-last-commit.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/get-merged-branch-last-commit.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
 
   branch-and-last-commit-merged-info:
     needs: [branch-and-last-commit]
@@ -69,10 +53,10 @@ jobs:
 
   promote-branch-last-commit-to-prod:
     needs: [branch-and-last-commit]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       # Pull last vetted branch image
-      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_vetted:${{ needs.branch-and-last-commit.outputs.commit }}
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}:${{ needs.branch-and-last-commit.outputs.commit }}
       # Push prod Image
       push_as: ${{ github.repository }}:${{ needs.branch-and-last-commit.outputs.commit }}
     secrets:
@@ -114,7 +98,7 @@ jobs:
 
   promote-branch-last-commit-to-prod-latest:
     needs: [branch-and-last-commit, promote-branch-last-commit-to-prod]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       image_name: ${{ github.repository }}
       image_tag: ${{ needs.branch-and-last-commit.outputs.commit }}
@@ -124,10 +108,10 @@ jobs:
 
   promote-branch-last-commit-devenv:
     needs: [branch-and-last-commit]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       # Pull last branch devenv image
-      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_dev:${{ needs.branch-and-last-commit-to-prod.outputs.commit }}
+      pull_as: ${{ github.repository }}_${{ needs.branch-and-last-commit.outputs.branch }}_dev:${{ needs.branch-and-last-commit.outputs.commit }}
       # Push prod devenv image
       push_as: ${{ github.repository }}-dev:${{ needs.branch-and-last-commit.outputs.commit }}
     secrets:
@@ -170,7 +154,7 @@ jobs:
 
   promote-branch-last-commit-devenv-to-latest:
     needs: [branch-and-last-commit, promote-branch-last-commit-devenv]
-    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@2d5e21dc5d146bf2a8d1db642d1abebe3860a802
+    uses: brianjbayer/gh-actions-test-bed/.github/workflows/pull-push-latest-image.yml@9b903d417332a3baa13e828861c4ec6b4c7c9436
     with:
       image_name: ${{ github.repository }}-dev
       image_tag: ${{ needs.branch-and-last-commit.outputs.commit }}
