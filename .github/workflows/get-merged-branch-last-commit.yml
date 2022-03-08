@@ -12,7 +12,7 @@ on:
 
 jobs:
   merged-branch-commit:
-    name: Generate  brancoutput
+    name: Generate merged branch and branch last commit
     runs-on: ubuntu-latest
     # Map the job outputs to step outputs
     outputs:
