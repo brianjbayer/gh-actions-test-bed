@@ -37,7 +37,7 @@ jobs:
 
   promote-branch-last-commit-to-prod-latest:
     needs: [branch-and-last-commit, promote-branch-last-commit-to-prod]
-    uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_latest_image.yml@main
     with:
       image_name: ${{ github.repository }}
       image_tag: ${{ needs.branch-and-last-commit.outputs.commit }}
@@ -59,7 +59,7 @@ jobs:
 
   promote-branch-last-commit-devenv-to-latest:
     needs: [branch-and-last-commit, promote-branch-last-commit-devenv]
-    uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_latest_image.yml@main
     with:
       image_name: ${{ github.repository }}-dev
       image_tag: ${{ needs.branch-and-last-commit.outputs.commit }}
