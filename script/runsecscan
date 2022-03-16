@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Exit script on any errors
+set -e
+
+run_command='bundle exec bundle-audit check --update'
+echo "RUNNING [${run_command}]..."
+# Allow to fail but catch return code
+set +e
+$run_command
+run_return_code=$?
+# NOTE return code must be caught before any other command
+set -e
+echo ''
+
+echo "EXITING WITH RUN RETURN CODE [${run_return_code}]"
+exit $run_return_code
