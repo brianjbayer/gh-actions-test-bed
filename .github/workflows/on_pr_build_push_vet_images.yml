@@ -9,17 +9,20 @@ env:
   BRANCH: ${{ github.head_ref }}
   COMMIT: ${{ github.event.pull_request.head.sha }}
 
+# Possibly produced images
+  #             owner/repository_branch:commitsha
   VETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}:${{ github.event.pull_request.head.sha }}
+
+  #               owner/repository_branch_unvetted:commitsha
   UNVETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
+
+  #             owner/repository_branch_dev:commitsha
   DEVENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
 jobs:
 
-  # this-could-go-git-info:
-  #   uses: brianjbayer/gh-actions-test-bed/.github/workflows/git_github_info.yml@reusable-workflows
-
   build-and-push-branch-devenv:
-    uses: brianjbayer/actions-image-cicd-workflows/.github/workflows/build-push-image.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/build_push_image.yml@main
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
       buildopts: --target devenv
@@ -28,18 +31,12 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   build-and-push-branch-unvetted:
-    uses: brianjbayer/actions-image-cicd-workflows/.github/workflows/build-push-image.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/build_push_image.yml@main
     with:
       image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-  vet-devenv-mutable:
-    needs: build-and-push-branch-devenv
-    uses: brianjbayer/actions-image-cicd-workflows/.github/workflows/vet-image-mutable.yml@main
-    with:
-      image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
 
   vet-code-standards:
     needs: build-and-push-branch-devenv
@@ -47,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun rubocop on development environment
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rake rubocop"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runlint"
 
   vet-dependency-security:
     needs: build-and-push-branch-devenv
@@ -55,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun bundle-audit on development environment
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec bundle-audit check --update"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runsecscan"
 
   vet-e2e-tests-deploy-image:
     needs: build-and-push-branch-unvetted
@@ -71,11 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun devenv image
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d bundle exec rspec"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runtests"
 
   push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
-    uses: brianjbayer/actions-image-cicd-workflows/.github/workflows/pull-push-image.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
     with:
       # Pull unvetted branch image
       pull_as: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
