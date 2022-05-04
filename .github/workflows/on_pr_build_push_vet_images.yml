@@ -5,79 +5,88 @@ on:
     branches:
       - main
 
-env:
-  BRANCH: ${{ github.head_ref }}
-  COMMIT: ${{ github.event.pull_request.head.sha }}
+# FYI...
+#  Raw Branch Name: ${{ github.head_ref }}
+#  <commit-sha>: ${{ github.event.pull_request.head.sha }}
 
-# Possibly produced images
-  #             owner/repository_branch:commitsha
-  VETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}:${{ github.event.pull_request.head.sha }}
-
-  #               owner/repository_branch_unvetted:commitsha
-  UNVETTED_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
-
-  #             owner/repository_branch_dev:commitsha
-  DEVENV_IMAGE: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+# Produced images...
+#  1. (Always) Unvetted Image: <owner/repository>_<normalized-branch>_unvetted:<commit-sha>
+#  2. (Always) Dev Environment Image: <owner/repository>_<normalized-branch>_dev:<commit-sha>
+#  3. (If vetted) Vetted_image: <owner/repository>_<normalized-branch>:<commit-sha>
 
 jobs:
+  pr-norm-branch:
+    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@add-normalize-image-name
+    with:
+      raw_name: ${{ github.head_ref }}
 
   build-and-push-branch-devenv:
+    needs: [pr-norm-branch]
     uses: brianjbayer/actions-image-cicd/.github/workflows/build_push_image.yml@main
     with:
-      image: ${{ github.repository }}_${{ github.head_ref }}_dev:${{ github.event.pull_request.head.sha }}
+      image: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_dev:${{ github.event.pull_request.head.sha }}
       buildopts: --target devenv
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   build-and-push-branch-unvetted:
+    needs: [pr-norm-branch]
     uses: brianjbayer/actions-image-cicd/.github/workflows/build_push_image.yml@main
     with:
-      image: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
+      image: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_unvetted:${{ github.event.pull_request.head.sha }}
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   vet-code-standards:
-    needs: build-and-push-branch-devenv
+    needs: [pr-norm-branch, build-and-push-branch-devenv]
     runs-on: ubuntu-latest
+    env:
+      DEVENV_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_dev:${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun rubocop on development environment
         run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runlint"
 
   vet-dependency-security:
-    needs: build-and-push-branch-devenv
+    needs: [pr-norm-branch, build-and-push-branch-devenv]
     runs-on: ubuntu-latest
+    env:
+      DEVENV_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_dev:${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun bundle-audit on development environment
         run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runsecscan"
 
   vet-e2e-tests-deploy-image:
-    needs: build-and-push-branch-unvetted
+    needs: [pr-norm-branch, build-and-push-branch-unvetted]
     runs-on: ubuntu-latest
+    env:
+      UNVETTED_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_unvetted:${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun unvetted image
         run: "APP_IMAGE=${UNVETTED_IMAGE} ./script/dockercomposerun -c"
 
   vet-e2e-tests-devenv-image:
-    needs: build-and-push-branch-devenv
+    needs: [pr-norm-branch, build-and-push-branch-devenv]
     runs-on: ubuntu-latest
+    env:
+      DEVENV_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_dev:${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun devenv image
         run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runtests"
 
   push-branch-vetted-deploy-image:
-    needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image]
+    needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image, pr-norm-branch]
     uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
     with:
       # Pull unvetted branch image
-      pull_as: ${{ github.repository }}_${{ github.head_ref }}_unvetted:${{ github.event.pull_request.head.sha }}
+      pull_as: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_unvetted:${{ github.event.pull_request.head.sha }}
       # Push Vetted Image
-      push_as: ${{ github.repository }}_${{ github.head_ref }}:${{ github.event.pull_request.head.sha }}
+      push_as: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}:${{ github.event.pull_request.head.sha }}
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
