@@ -7,11 +7,11 @@ on:
 jobs:
 
   branch-and-last-commit:
-    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@add-normalize-image-name
+    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@main
 
   push-norm-branch:
     needs: [branch-and-last-commit]
-    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@add-normalize-image-name
+    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@main
     with:
       raw_name: ${{ needs.branch-and-last-commit.outputs.branch }}
 
