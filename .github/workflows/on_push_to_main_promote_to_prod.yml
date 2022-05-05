@@ -7,7 +7,7 @@ on:
 jobs:
 
   branch-and-last-commit:
-    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@add-normalize-image-name
 
   push-norm-branch:
     needs: [branch-and-last-commit]
