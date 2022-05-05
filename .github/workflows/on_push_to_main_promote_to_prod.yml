@@ -54,7 +54,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   promote-branch-last-commit-devenv:
-    needs: [branch-and-last-commit]
+    needs: [branch-and-last-commit, push-norm-branch]
     uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
     with:
       # Pull last branch devenv image
