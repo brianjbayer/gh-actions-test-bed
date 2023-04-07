@@ -16,7 +16,7 @@ on:
 
 jobs:
   pr-norm-branch:
-    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@main
+    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@replace-deprecated-set-output
     with:
       raw_name: ${{ github.head_ref }}
 
