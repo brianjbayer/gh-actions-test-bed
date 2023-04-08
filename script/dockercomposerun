@@ -56,12 +56,11 @@ echo ''
 
 echo 'DOCKER VERSION...'
 docker --version
-docker-compose --version
 echo ''
 
 # Override docker compose environments
 echo 'DOCKER-COMPOSE COMMAND...'
-docker_compose_command='docker-compose -f docker-compose.yml '
+docker_compose_command='docker compose -f docker-compose.yml '
 
 if [ ! -z ${ci} ]; then
   echo "...Using CI Environment with Image [${APP_IMAGE}]"
@@ -93,7 +92,7 @@ echo ''
 echo "DOCKER-COMPOSE RUNNING [$@]..."
 # Allow to fail but catch return code
 set +e
-$docker_compose_command run app "$@"
+$docker_compose_command run --rm app "$@"
 run_return_code=$?
 # NOTE return code must be caught before any other command
 set -e

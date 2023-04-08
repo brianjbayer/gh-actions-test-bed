@@ -7,7 +7,7 @@ on:
 jobs:
 
   branch-and-last-commit:
-    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@replace-deprecated-set-output
+    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@main
 
   push-norm-branch:
     needs: [branch-and-last-commit]
