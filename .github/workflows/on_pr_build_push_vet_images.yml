@@ -16,7 +16,7 @@ on:
 
 jobs:
   pr-norm-branch:
-    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@replace-deprecated-set-output
+    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@main
     with:
       raw_name: ${{ github.head_ref }}
 
@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun rubocop on development environment
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runlint"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/run lint"
 
   vet-dependency-security:
     needs: [pr-norm-branch, build-and-push-branch-devenv]
@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun bundle-audit on development environment
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runsecscan"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/run secscan"
 
   vet-e2e-tests-deploy-image:
     needs: [pr-norm-branch, build-and-push-branch-unvetted]
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: dockercomposerun devenv image
-        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/runtests"
+        run: "APP_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -d ./script/run tests"
 
   push-branch-vetted-deploy-image:
     needs: [vet-code-standards, vet-dependency-security, vet-e2e-tests-deploy-image, pr-norm-branch]

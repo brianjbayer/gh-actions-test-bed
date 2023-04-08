@@ -1,6 +1,6 @@
 # sample-login-capybara-rspec
 ### Base Image ###
-FROM ruby:2.7.5-alpine AS ruby-alpine
+FROM ruby:3.2.2-alpine AS ruby-alpine
 
 ### Builder Stage ###
 FROM ruby-alpine AS builder
@@ -39,4 +39,4 @@ COPY --from=builder --chown=deployer /usr/local/bundle/ /usr/local/bundle/
 WORKDIR /app
 COPY --chown=deployer . /app/
 
-CMD bundle exec rake
+CMD ./script/run tests
