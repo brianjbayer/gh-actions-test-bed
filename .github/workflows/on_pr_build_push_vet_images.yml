@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Look for changed files
         id: changed-db-files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v44.4.0
         with:
           files: db/migrate/*
     outputs:
