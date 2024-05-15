@@ -5,6 +5,7 @@ on:
       - main
 
 jobs:
+  # Example of detecting changed files
   # From https://github.com/tj-actions/changed-files?tab=readme-ov-file#on-push-%EF%B8%8F
   changed_files:
     runs-on: ubuntu-latest
@@ -34,7 +35,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Look for changed files
         id: changed-db-files
         uses: tj-actions/changed-files@v44.4.0
