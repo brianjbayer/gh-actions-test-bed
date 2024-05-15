@@ -5,6 +5,7 @@ on:
       - main
 
 jobs:
+  # Example of detecting changed files
   # From https://github.com/tj-actions/changed-files?tab=readme-ov-file#on-push-%EF%B8%8F
   changed_files:
     runs-on: ubuntu-latest
