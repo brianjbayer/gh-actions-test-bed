@@ -1,6 +1,7 @@
 # sample-login-capybara-rspec
 ### Base Image ###
-FROM ruby:3.2.2-alpine AS ruby-alpine
+ARG ARG BASE_IMAGE=ruby:3.2.2-alpine
+FROM --platform=$BUILDPLATFORM ${BASE_IMAGE} AS ruby-alpine
 
 ### Builder Stage ###
 FROM ruby-alpine AS builder

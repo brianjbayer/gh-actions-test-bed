@@ -1,0 +1,66 @@
+name: On Push (Merge)
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+# The get_merged_branch_last_commit workflow can really only be tested
+# on a merge commit
+  branch-and-last-commit:
+    uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@add-pr-helper-reusable-wotkflows
+
+  push-norm-branch:
+    needs: [branch-and-last-commit]
+    uses: brianjbayer/actions-image-cicd/.github/workflows/normalize_for_image_name.yml@add-pr-helper-reusable-wotkflows
+    with:
+      raw_name: ${{ needs.branch-and-last-commit.outputs.branch }}
+
+  branch-and-last-commit-merged-info:
+    needs: [branch-and-last-commit, push-norm-branch]
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_LAST_COMMIT: ${{ needs.branch-and-last-commit.outputs.commit }}
+      BRANCH: ${{ needs.branch-and-last-commit.outputs.branch }}
+      NORM_BRANCH: ${{ needs.push-norm-branch.outputs.name }}
+
+    steps:
+      - name: Output last commit of merged branch env var
+        run: echo "BRANCH_LAST_COMMIT=[${BRANCH_LAST_COMMIT}]"
+      - name: Output merged branch env var
+        run: echo "BRANCH=[${BRANCH}]"
+      - name: Output normalized merged branch env var
+        run: echo "NORM_BRANCH=[${NORM_BRANCH}]"
+
+# Ensure last branch commit-tagged image exists
+# This should demonstrate impotence in the output
+# if the commit was created as part of PR job
+  ensure-last-branch-buildx-push-commit-image:
+    needs: [branch-and-last-commit, push-norm-branch]
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-pr-helper-reusable-wotkflows
+    with:
+      image: ${{ github.repository }}_${{ needs.push-norm-branch.outputs.name }}:${{ needs.branch-and-last-commit.outputs.commit }}
+      platforms: "linux/amd64,linux/arm64"
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  copy-image-branch-last-commit-to-prod:
+    needs: [branch-and-last-commit, ensure-last-branch-buildx-push-commit-image, push-norm-branch]
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@add-pr-helper-reusable-wotkflows
+    with:
+      source_image: ${{ github.repository }}_${{ needs.push-norm-branch.outputs.name }}:${{ needs.branch-and-last-commit.outputs.commit }}
+      target_image: ${{ github.repository }}:${{ needs.branch-and-last-commit.outputs.commit }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  copy-image-branch-last-commit-to-prod-latest:
+    needs: [branch-and-last-commit, copy-image-branch-last-commit-to-prod]
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image_to_latest.yml@add-pr-helper-reusable-wotkflows
+    with:
+      image: ${{ github.repository }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
