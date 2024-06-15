@@ -1,0 +1,71 @@
+name: Build and Vet
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  # --- Image Names ---
+
+  image-names:
+    name: PR (Branch) Image Names
+    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@add-pr-helper-reusable-wotkflows
+    with:
+      add_branch_name: true
+
+  # --- Build and Push Images ---
+
+  buildx-and-push-dev-image:
+    name: Build Development Image
+    needs:
+      - image-names
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-pr-helper-reusable-wotkflows
+    with:
+      image: ${{ needs.image-names.outputs.dev_image }}
+      platforms: "linux/amd64,linux/arm64"
+      buildopts: --target devenv
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  buildx-and-push-unvetted-image:
+    name: Build Deployment (Unvetted) Image
+    needs:
+      - image-names
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-pr-helper-reusable-wotkflows
+    with:
+      image: ${{ needs.image-names.outputs.unvetted_image }}
+      platforms: "linux/amd64,linux/arm64"
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+
+# --- Vet Images ---
+
+  vet-lint-and-dependency-security:
+    name: Vet Code Quality
+    needs:
+      - image-names
+      - buildx-and-push-dev-image
+    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@add-pr-helper-reusable-wotkflows
+    with:
+      lint_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run lint"
+      dependency_security_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run secscan"
+
+  # --- Promote Vetted Image If It Passes ---
+
+  copy-branch-vetted-deploy-image:
+    name: Promote Vetted Deployment Image
+    needs:
+      - image-names
+      - vet-lint-and-dependency-security
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@add-pr-helper-reusable-wotkflows
+    with:
+      source_image: ${{ needs.image-names.outputs.unvetted_image }}
+      target_image: ${{ needs.image-names.outputs.vetted_image }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
