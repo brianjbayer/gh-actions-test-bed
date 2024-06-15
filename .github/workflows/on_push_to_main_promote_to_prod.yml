@@ -47,7 +47,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   promote-merged-deploy-image-to-latest:
-    name: Promote Merged Deployment Image to Latest
+    name: Promote Latest Deployment Image
     needs:
       - production-image-names
       - promote-merged-deploy-image
@@ -73,6 +73,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   promote-merged-dev-image-to-latest:
+    name: Promote Latest Development Image
     needs:
       - production-image-names
       - promote-merged-dev-image
