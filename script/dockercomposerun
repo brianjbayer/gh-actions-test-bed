@@ -1,114 +1,84 @@
 #!/bin/sh
 
-# ----------------------------------------------------------------------
-# This script runs the project docker-compose framework.
-#
-# - The arguments to this script are passed to the browsertests service
-#   as the command override
-#
-# - Any environment variables set when calling this script are passed
-#   through to the docker-compose framework
-#   (e.g. configuration other than the defaults)
-#
-# OPTIONS:
-# -c: Use the docker-compose CI environment with APP_IMAGE
-# -d: Use the docker-compose Dev environment with APP_IMAGE
-# ----------------------------------------------------------------------
-
-usage() {
-  echo "Usage: $0 [-cd] [CMD]"
-}
-
-err_exit() {
-  local err_msg="$1"
-  local err_code=$2
-  echo "${err_msg}  --  Exit:[${err_code}]" 1>&2
-  usage
-  exit $err_code
-}
-
-# --- MAIN --- #
 # Exit script on any errors
 set -e
 
+usage() {
+  cat << USAGE
+Usage: $0 [-cdho] [CMD]
+
+This script orchestrates 'docker compose run browsertests' using the docker compose framework
+  * Arguments are passed to the app service as the CMD (entrypoint)
+  * Environment variables override app and framework defaults
+
+OPTIONS: (in override order)
+  -o: Run only the browsertests service (no Selenium Browser)
+  -d: Run the docker-compose Dev environment
+  -c: Run the docker-compose CI environment (must specify BROWSERTESTS_IMAGE)
+USAGE
+}
+
+err_exit() {
+  err_code=$1
+  err_msg="$2"
+  echo "${err_msg}  --  Exit:[${err_code}]" 1>&2
+  exit $err_code
+}
+
 # Handle options
-while getopts ":cd" options; do
+while getopts ":cdho" options; do
   case "${options}" in
     c)
-      echo "CI Environment"
-      ci=true
+      ci=1
       ;;
     d)
-      echo "Development Environment"
-      devenv=true
+      devenv=1
+      ;;
+    h)
+      usage ; exit
+      ;;
+    o)
+      browsertests_only=1
       ;;
     \?)
-    err_exit "Invalid Option: -$OPTARG" 1
+      usage
+      err_exit 1 "Invalid Option: -$OPTARG"
       ;;
   esac
 done
 shift $((OPTIND-1))
 
-echo ''
-echo "ENVIRONMENT VARIABLES..."
-env
-echo ''
-
-echo 'DOCKER VERSION...'
-docker --version
-echo ''
-
-# Override docker compose environments
-echo 'DOCKER-COMPOSE COMMAND...'
+echo "DOCKER VERSION: [`docker --version`]"
 docker_compose_command='docker compose -f docker-compose.yml '
 
-if [ ! -z ${ci} ]; then
-  echo "...Using CI Environment with Image [${APP_IMAGE}]"
-  docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
-fi
+[ ! -z ${devenv} ] && docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
+[ ! -z ${ci} ] && docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
 
-if [ ! -z ${devenv} ]; then
-  echo "...Using Development Environment with Image [${APP_IMAGE}]"
-  docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
-fi
-echo "...COMMAND: [${docker_compose_command}]"
-echo ''
+# Default is to run the browsertests, but must specify --service-ports
+# (by default docker compose run does not expose host ports)
+run_command='run --rm --service-ports app '
 
-echo 'DOCKER-COMPOSE CONFIGURATION...'
+docker_compose_run_command="${docker_compose_command} ${run_command}"
+echo "DOCKER COMPOSE RUN COMMAND: [${docker_compose_run_command}]"
+
+echo 'DOCKER COMPOSE CONFIGURATION...'
 $docker_compose_command config
-echo ''
 
-echo 'DOCKER-COMPOSE PULLING...'
-set +e
-$docker_compose_command pull
-echo '...Allowing pull errors (for local images)'
-set -e
-echo ''
+echo 'DOCKER COMPOSE PULLING...'
+set +e ; $docker_compose_command pull ; set -e
 
-echo 'DOCKER IMAGES...'
-docker images
-echo ''
-
-echo "DOCKER-COMPOSE RUNNING [$@]..."
+echo "DOCKER COMPOSE RUNNING [${docker_compose_run_command}] [$@]..."
 # Allow to fail but catch return code
 set +e
-$docker_compose_command run --rm app "$@"
+${docker_compose_run_command} "$@"
 run_return_code=$?
-# NOTE return code must be caught before any other command
 set -e
-echo ''
 
-if [ $run_return_code -eq 0 ]; then
-    run_disposition='PASSED'
-else
-    run_disposition='FAILED'
-fi
-echo "...RUN [${run_disposition}] WITH RETURN CODE [${run_return_code}]"
-echo ''
+run_disposition='SUCCESS' ; [ $run_return_code -eq 0 ] || run_disposition='FAIL'
+echo "DOCKER COMPOSE RUN [${run_disposition}] WITH RETURN CODE [${run_return_code}]"
 
 echo 'DOCKER-COMPOSE DOWN...'
 $docker_compose_command down
-echo ''
 
-echo "EXITING WITH ${run_disposition} RUN RETURN CODE ${run_return_code}"
+echo "EXIT: ${run_disposition} [${run_return_code}]"
 exit $run_return_code
