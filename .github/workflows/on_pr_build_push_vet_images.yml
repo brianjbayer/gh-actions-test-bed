@@ -11,7 +11,8 @@ jobs:
 
   image-names:
     name: PR (Branch) Image Names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@add-pr-helper-reusable-wotkflows
+    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@v0.2.0
+
     with:
       add_branch_name: true
 
@@ -21,7 +22,7 @@ jobs:
     name: Build Development Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-pr-helper-reusable-wotkflows
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@v0.2.0
     with:
       image: ${{ needs.image-names.outputs.dev_image }}
       platforms: "linux/amd64,linux/arm64"
@@ -34,7 +35,7 @@ jobs:
     name: Build Deployment (Unvetted) Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-pr-helper-reusable-wotkflows
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@v0.2.0
     with:
       image: ${{ needs.image-names.outputs.unvetted_image }}
       platforms: "linux/amd64,linux/arm64"
@@ -50,7 +51,7 @@ jobs:
     needs:
       - image-names
       - buildx-and-push-dev-image
-    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@add-pr-helper-reusable-wotkflows
+    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@v0.2.0
     with:
       lint_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run lint"
       dependency_security_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run secscan"
@@ -62,7 +63,7 @@ jobs:
     needs:
       - image-names
       - vet-lint-and-dependency-security
-    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@add-pr-helper-reusable-wotkflows
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@v0.2.0
     with:
       source_image: ${{ needs.image-names.outputs.unvetted_image }}
       target_image: ${{ needs.image-names.outputs.vetted_image }}
