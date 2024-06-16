@@ -43,7 +43,7 @@ jobs:
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
 
-# --- Vet Images ---
+  # --- Vet Images ---
 
   vet-lint-and-dependency-security:
     name: Vet Code Quality
