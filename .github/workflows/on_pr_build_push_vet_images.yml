@@ -46,7 +46,7 @@ jobs:
 
   # --- Vet Images ---
 
-  vet-lint-and-dependency-security:
+  vet-lint-dependency-security-tests:
     name: Vet Code Quality
     needs:
       - image-names
@@ -55,6 +55,7 @@ jobs:
     with:
       lint_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run lint"
       dependency_security_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run secscan"
+      tests_command: "RAILS_ENV=test APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -d ./script/run tests"
 
   # --- Promote Vetted Image If It Passes ---
 
@@ -62,7 +63,7 @@ jobs:
     name: Promote Vetted Deployment Image
     needs:
       - image-names
-      - vet-lint-and-dependency-security
+      - vet-lint-dependency-security-tests
     uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@v0.2.2
     with:
       source_image: ${{ needs.image-names.outputs.unvetted_image }}
