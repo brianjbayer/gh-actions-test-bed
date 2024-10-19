@@ -11,7 +11,7 @@ jobs:
 
   image-names:
     name: PR (Branch) Image Names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@add-promote-annotations
+    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@v0.2.2
 
     with:
       add_branch_name: true
@@ -22,7 +22,7 @@ jobs:
     name: Build Development Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-promote-annotations
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@v0.2.2
     with:
       image: ${{ needs.image-names.outputs.dev_image }}
       platforms: "linux/amd64,linux/arm64"
@@ -35,7 +35,7 @@ jobs:
     name: Build Deployment (Unvetted) Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@add-promote-annotations
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_push_image.yml@v0.2.2
     with:
       image: ${{ needs.image-names.outputs.unvetted_image }}
       platforms: "linux/amd64,linux/arm64"
@@ -46,15 +46,16 @@ jobs:
 
   # --- Vet Images ---
 
-  vet-lint-and-dependency-security:
+  vet-lint-dependency-security-tests:
     name: Vet Code Quality
     needs:
       - image-names
       - buildx-and-push-dev-image
-    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@add-promote-annotations
+    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@v0.2.2
     with:
       lint_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run lint"
       dependency_security_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run secscan"
+      tests_command: "RAILS_ENV=test APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -d ./script/run tests"
 
   # --- Promote Vetted Image If It Passes ---
 
@@ -62,8 +63,8 @@ jobs:
     name: Promote Vetted Deployment Image
     needs:
       - image-names
-      - vet-lint-and-dependency-security
-    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@add-promote-annotations
+      - vet-lint-dependency-security-tests
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@v0.2.2
     with:
       source_image: ${{ needs.image-names.outputs.unvetted_image }}
       target_image: ${{ needs.image-names.outputs.vetted_image }}
