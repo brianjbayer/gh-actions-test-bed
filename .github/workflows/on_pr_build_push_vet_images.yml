@@ -14,9 +14,6 @@ jobs:
     uses: brianjbayer/actions-image-cicd/.github/workflows/git_detect_changed_files.yml@add-git-detect-changed-files
     with:
       file_pattern: 'db/migrate/*'
-      # TESTING ONLY
-      base_commit: foo
-      target_commit: bar
 
   check-detect-changed-files:
     name: Check Detect Changed Files
