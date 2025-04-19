@@ -24,7 +24,7 @@ jobs:
           if [ "${{ needs.detect-changed-files.outputs.any_changed }}" = "true" ]; then
             echo "Changed files detected "
           else
-          echo "Changed files detected "
+            echo "No Changed files detected"
           fi
 
   # --- Image Names ---
