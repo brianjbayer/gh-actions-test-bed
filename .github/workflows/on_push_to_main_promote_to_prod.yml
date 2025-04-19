@@ -10,7 +10,7 @@ jobs:
 
   detect-changed-files:
     name: Detect Changed Files Using Git
-    uses: brianjbayer/actions-image-cicd/.github/workflows/git_detect_changed_files.yml@add-git-detect-changed-files
+    uses: brianjbayer/actions-image-cicd/.github/workflows/git_detect_changed_files.yml@v0.2
     with:
       file_pattern: 'db/migrate/*'
 
@@ -22,9 +22,9 @@ jobs:
       - name: Check any changed
         run: |
           if [ "${{ needs.detect-changed-files.outputs.any_changed }}" = "true" ]; then
-            echo "Changed files detected "
+            echo "Changed files detected"
           else
-          echo "Changed files detected "
+            echo "No Changed files detected"
           fi
 
   # --- Image Names ---
