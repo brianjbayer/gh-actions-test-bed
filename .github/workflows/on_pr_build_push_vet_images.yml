@@ -8,7 +8,7 @@ jobs:
 
   detect-changed-files:
     name: Detect Changed Files Using Git
-    uses: brianjbayer/actions-image-cicd/.github/workflows/git_detect_changed_files.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/git_detect_changed_files.yml@v0.2
     with:
       file_pattern: 'db/migrate/*'
 
@@ -29,8 +29,7 @@ jobs:
 
   image-names:
     name: PR (Branch) Image Names
-    # uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@v0.2
-    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/image_names.yml@v0.2
 
     with:
       add_branch_name: true
@@ -41,7 +40,7 @@ jobs:
     name: Build Development Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@v0.2
     with:
       image: ${{ needs.image-names.outputs.dev_image }}
       buildopts: --target devenv
@@ -53,7 +52,7 @@ jobs:
     name: Build Deployment (Unvetted) Image
     needs:
       - image-names
-    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@v0.2
     with:
       image: ${{ needs.image-names.outputs.unvetted_image }}
     secrets:
@@ -68,7 +67,7 @@ jobs:
     needs:
       - image-names
       - buildx-and-push-dev-image
-    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/vet_code_standards.yml@v0.2
     with:
       lint_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run lint"
       dependency_security_command: "APP_IMAGE=${{ needs.image-names.outputs.dev_image }} ./script/dockercomposerun -do ./script/run secscan"
@@ -81,7 +80,7 @@ jobs:
     needs:
       - image-names
       - vet-lint-dependency-security-tests
-    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@add-action-delete-docker-hub-repo
+    uses: brianjbayer/actions-image-cicd/.github/workflows/copy_image.yml@v0.2
     with:
       source_image: ${{ needs.image-names.outputs.unvetted_image }}
       target_image: ${{ needs.image-names.outputs.vetted_image }}
