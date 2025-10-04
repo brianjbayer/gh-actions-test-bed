@@ -127,7 +127,7 @@ jobs:
         [
           "${{ needs.merged-image-names.outputs.dev_repository }}",
           "${{ needs.merged-image-names.outputs.unvetted_repository }}",
-          "${{ needs.merged-image-names.outputs.unvetted_repository }}"
+          "${{ needs.merged-image-names.outputs.vetted_repository }}"
         ]
       # LEX: REMOVE REF
       ref: add-action-delete-docker-hub-repo
