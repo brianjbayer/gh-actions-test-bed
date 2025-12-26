@@ -55,6 +55,24 @@ jobs:
     name: Latest Tag
     uses: brianjbayer/actions-image-cicd/.github/workflows/latest_tag.yml@add-image-registry-build-cache
 
+  # --- Refresh the Root Build Cache ---
+  refresh_root_build_cache:
+    name: Refresh Root Build Cache (Dev and Deploy Layers)
+    needs:
+      - merged-image-names
+      - branch-and-last-commit
+    uses: brianjbayer/actions-image-cicd/.github/workflows/refresh_amd_arm_build_cache.yml@add-image-registry-build-cache
+    with:
+      build_cache_name: ${{ needs.merged-image-names.outputs.root_build_cache_name }}
+      # Must match layers built in CI/PR workflows
+      buildopts_list: '["--target devenv", ""]'
+      # Build at the same commit as promoted latest image
+      ref: ${{ needs.branch-and-last-commit.outputs.commit }}
+    secrets:
+      registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
+      registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+
   # --- Promote Production Images ---
 
   # Promote Deployment Image
