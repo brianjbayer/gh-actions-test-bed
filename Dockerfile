@@ -1,5 +1,5 @@
 # --- Base Image ---
-ARG BASE_IMAGE=ruby:3.4.6-alpine
+ARG BASE_IMAGE=ruby:3.4.7-slim-trixie
 FROM ${BASE_IMAGE} AS ruby-base
 
 #--- Base Builder Stage ---
@@ -9,17 +9,21 @@ FROM ruby-base AS base-builder
 ARG BUNDLER_VERSION=2.7.2
 ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
-# Install base build packages needed for both devenv and deploy builders
-# Alpine needs build-base for building native extensions
-ARG BASE_BUILD_PACKAGES='build-dependencies build-base'
+# Install base build packages
+# ARG BASE_BUILD_PACKAGES='build-essential libyaml-dev'
+ARG BASE_BUILD_PACKAGES='build-essential'
 
-RUN apk --update add --virtual ${BASE_BUILD_PACKAGES} \
+# Assumes debian based
+RUN apt-get update \
+  && apt-get -y dist-upgrade \
+  && apt-get -y install ${BASE_BUILD_PACKAGES} \
+  && rm -rf /var/lib/apt/lists/* \
   # Update gem command to latest
   && gem update --system \
-  # Install bundler version
+  # Install bundler
   && gem install bundler:${BUNDLER_VERSION}
 
-# Copy Gemfiles
+# Install the Ruby dependencies (defined in the Gemfile/Gemfile.lock)
 WORKDIR /app
 COPY Gemfile Gemfile.lock ./
 
@@ -33,7 +37,11 @@ ARG DEVENV_PACKAGES='git vim'
 ARG BUNDLER_PATH=/usr/local/bundle
 
 # Install dev environment specific build packages
-RUN apk add --no-cache ${DEVENV_PACKAGES} \
+# Assumes debian based
+RUN apt-get update \
+  && apt-get -y dist-upgrade \
+  && apt-get -y install ${DEVENV_PACKAGES} \
+  && rm -rf /var/lib/apt/lists/* \
   # Add support for multiple platforms
   && bundle lock --add-platform ruby \
   && bundle lock --add-platform x86_64-linux \
@@ -50,7 +58,7 @@ FROM devenv-builder AS devenv
 WORKDIR /app
 
 # Start devenv in (command line) shell
-CMD ["sh"]
+CMD ["bash"]
 
 #--- Deploy Builder Stage ---
 FROM base-builder AS deploy-builder
@@ -62,6 +70,7 @@ RUN bundle config set --local without 'development:test' \
     && bundle lock --add-platform ruby \
     && bundle lock --add-platform x86_64-linux \
     && bundle lock --add-platform aarch64-linux \
+    # Install app dependencies
     && bundle install \
     # Remove unneeded files (cached *.gem, *.o, *.c)
     && rm -rf ${BUNDLER_PATH}/cache/*.gem \
@@ -77,7 +86,7 @@ ARG BUNDLER_VERSION=2.7.2
 ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
 # Add user for running app
-RUN adduser -D deployer
+RUN useradd -m -s /bin/bash -c '' deployer && usermod -L deployer
 USER deployer
 
 WORKDIR /app
