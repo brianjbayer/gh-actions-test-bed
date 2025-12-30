@@ -1,12 +1,12 @@
 # --- Base Image ---
-ARG BASE_IMAGE=ruby:3.4.7-slim-trixie
+ARG BASE_IMAGE=ruby:3.4.8-slim-trixie
 FROM ${BASE_IMAGE} AS ruby-base
 
 #--- Base Builder Stage ---
 FROM ruby-base AS base-builder
 
 # Use the same version of Bundler in the Gemfile.lock
-ARG BUNDLER_VERSION=2.7.2
+ARG BUNDLER_VERSION=4.0.3
 ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
 # Install base build packages
