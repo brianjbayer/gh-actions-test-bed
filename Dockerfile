@@ -1,5 +1,5 @@
 # --- Base Image ---
-ARG BASE_IMAGE=ruby:3.4.8-slim-trixie
+ARG BASE_IMAGE=ruby:4.0.1-slim-trixie
 FROM ${BASE_IMAGE} AS ruby-base
 
 #--- Base Builder Stage ---
