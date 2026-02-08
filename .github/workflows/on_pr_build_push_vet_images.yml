@@ -42,6 +42,8 @@ jobs:
       - image-names
     uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@hub-login-secure-merge-branch
     with:
+      # TESTING!!!
+      runner_arm64: ''
       image: ${{ needs.image-names.outputs.dev_image }}
       buildopts: --target devenv
       # edge_build_cache_name: ${{ needs.image-names.outputs.edge_build_cache_name }}
@@ -57,6 +59,8 @@ jobs:
       - image-names
     uses: brianjbayer/actions-image-cicd/.github/workflows/buildx_amd_arm_image.yml@hub-login-secure-merge-branch
     with:
+      # TESTING!!!
+      runner_arm64: ''
       image: ${{ needs.image-names.outputs.unvetted_image }}
       # edge_build_cache_name: ${{ needs.image-names.outputs.edge_build_cache_name }}
       # root_build_cache_name: ${{ needs.image-names.outputs.root_build_cache_name }}
