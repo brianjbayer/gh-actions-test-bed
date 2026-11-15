@@ -1,13 +1,13 @@
 # --- Base Image ---
-ARG BASE_IMAGE=ruby:3.4.8-slim-trixie
+ARG BASE_IMAGE=ruby:4.0.9-slim-trixie
 FROM ${BASE_IMAGE} AS ruby-base
+
+# Use the same version of Bundler in the Gemfile.lock
+ARG BUNDLER_VERSION=4.0.24
+ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
 #--- Base Builder Stage ---
 FROM ruby-base AS base-builder
-
-# Use the same version of Bundler in the Gemfile.lock
-ARG BUNDLER_VERSION=4.0.3
-ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
 # Install base build packages
 # ARG BASE_BUILD_PACKAGES='build-essential libyaml-dev'
@@ -80,10 +80,6 @@ RUN bundle config set --local without 'development:test' \
 
 #--- Deploy Image ---
 FROM ruby-base AS deploy
-
-# Use the same version of Bundler in the Gemfile.lock
-ARG BUNDLER_VERSION=2.7.2
-ENV BUNDLER_VERSION=${BUNDLER_VERSION}
 
 # Add user for running app
 RUN useradd -m -s /bin/bash -c '' deployer && usermod -L deployer
