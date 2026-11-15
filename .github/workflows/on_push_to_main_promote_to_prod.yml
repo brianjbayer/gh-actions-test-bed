@@ -32,6 +32,8 @@ jobs:
   branch-and-last-commit:
     name: Merged Branch and Last Commit
     uses: brianjbayer/actions-image-cicd/.github/workflows/get_merged_branch_last_commit.yml@5df00a3d96883479660ba219ddbacc0324e43572
+    with:
+      summary: true
 
   merged-image-names:
     name: Merged (Branch) Image Names
